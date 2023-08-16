@@ -18,46 +18,70 @@ class InputHandler():
         self.db_path = info.get_db_path(info.country_dict.get(country_code))
         self.model_path = info.get_model_path(info.country_dict.get(country_code))
 
-        self.db_input_sheets = []
+        self.db_data_sheets = []
 
-        self.model_inputs = {}
+        self.model_input_sheets_info = {}
         self.InputVarsTranformDict = {}
 
-        self.raw_model_data = {}
+        self.raw_model_data_stage1 = {}
+        self.raw_model_data_to_transform = {}
         self.model_data = {}
 
 
     def get_model_inputs(self, return_method_output = False):
-        inputs_sheet = pd.read_excel(self.model_path, sheet_name='input')
+        model_sheet_names = xlrd.open_workbook(self.model_path, on_demand=True).sheet_names()
+        inputs_sheet = pd.read_excel(self.model_path, sheet_name='input')#.sort_values(by=mif.fname)
         output_keys = list(inputs_sheet[mif.output_sheet].unique())
-        self.db_input_sheets = list(inputs_sheet[mif.input_sheet].unique())
+        self.db_data_sheets = list(inputs_sheet[mif.input_sheet].unique())
         self.InputVarsTranformDict = inputs_sheet[mif.InputInstructionCols].set_index(mif.fname).to_dict()
         for k in output_keys:
-            self.model_inputs[k] = inputs_sheet.loc[inputs_sheet[mif.output_sheet]==k].reset_index().drop(columns = 'index')
-        print(f'Successfully obtained model inputs || input keys are {self.model_inputs.keys()}')
+            self.model_input_sheets_info[k] = inputs_sheet.loc[inputs_sheet[mif.output_sheet]==k].reset_index().drop(columns = 'index')
+        print(f'Successfully obtained model inputs || Model input keys are {self.model_input_sheets_info.keys()}')
 
 
         if return_method_output:
-            return self.model_inputs
+            return self.model_input_sheets_info
         else:
             return 0
-    def get_model_data(self):
-        assert len(self.model_inputs.keys()) > 0, f'get_model_data level ||Model inputs dict has no keys, should contain either subset of {mou.UnitsValueSet}'
-        assert len(self.db_input_sheets) > 0, f'get_model_data level || Input sheets list is empty. It must contain either subset of DB sheets list'
-        assert len(set.intersection(set(self.model_inputs.keys()),
+    def get_model_data(self, return_method_output = False):
+        assert len(self.model_input_sheets_info.keys()) > 0, f'get_model_data level || Model inputs dict has no keys, should contain either subset of {mou.UnitsValueSet}'
+        assert len(self.db_data_sheets) > 0, f'get_model_data level || Input sheets list is empty. It must contain either subset of DB sheets list'
+        assert len(set.intersection(set(self.model_input_sheets_info.keys()),
                                     mou.UnitsValueSet)) > 0, f'get_model_data level || None of Model Data keys, {self.model_inputs.keys} is in {mou.UnitsValueSet}'
-        for k in self.model_inputs.keys():
+        for k in self.model_input_sheets_info.keys():
             assert k in mou.UnitsValueSet, f'get_model_data level || Model data input key {k} is not in {mou.UnitsValueSet}'
 
         db_sheet_names = xlrd.open_workbook(self.db_path, on_demand=True).sheet_names()
 
-        assert len(set.intersection(set(self.db_input_sheets),set(db_sheet_names))) == len(self.db_input_sheets), f'Was not able to find sheets {np.setdiff1d(self.db_input_sheets,db_sheet_names)} in {self.db_path} file'
-        for sheet in self.db_input_sheets:
+        assert len(set.intersection(set(self.db_data_sheets),set(db_sheet_names))) == len(self.db_data_sheets), f'Was not able to find sheets {np.setdiff1d(self.db_unique_input_sheets,db_sheet_names)} in {self.db_path} file'
+        for sheet in self.db_data_sheets:
             try:
-                self.raw_model_data[sheet] = pd.read_excel(self.db_path,sheet_name=sheet).set_index(info.date_column)
+                self.raw_model_data_stage1[sheet] = pd.read_excel(self.db_path,sheet_name=sheet).set_index(info.date_column)
             except:
                 raise Exception(f'get_model_data level || There is no date column in sheet {sheet} in file {self.db_path} or it is called incorrectly')
-        print(3)
+
+        for input_sheet in self.model_input_sheets_info.keys():
+            current_input = self.model_input_sheets_info.get(input_sheet)
+            input_sheet_current_state = pd.DataFrame()
+            for source_sheet in list(current_input[mif.input_sheet].unique()):
+                print(f'get_model_data level || constructing raw input sheet; input sheet is {input_sheet}, source sheet is {source_sheet}')
+                source_sheet_cols_to_select = list(current_input.loc[current_input[mif.input_sheet]==source_sheet][mif.fname])
+                source_sheet_cols = self.raw_model_data_stage1.get(source_sheet).columns
+                not_present_source_sheet_cols = np.setdiff1d(source_sheet_cols_to_select, source_sheet_cols)
+                print(f'{len(not_present_source_sheet_cols)} of {len(source_sheet_cols_to_select)} were not found. These are {not_present_source_sheet_cols}')
+                source_sheet_cols_to_select = list(set(source_sheet_cols_to_select)-set(not_present_source_sheet_cols))
+                if len(input_sheet_current_state.columns) == 0:
+                    input_sheet_current_state = self.raw_model_data_stage1.get(source_sheet)[source_sheet_cols_to_select]
+                else:
+                    input_sheet_current_state = input_sheet_current_state.join(self.raw_model_data_stage1.get(source_sheet)[source_sheet_cols_to_select])
+                for col in not_present_source_sheet_cols:
+                    input_sheet_current_state[col] = None
+            self.raw_model_data_to_transform[input_sheet] = input_sheet_current_state
+
+        if return_method_output:
+            return self.raw_model_data_to_transform
+        else:
+            return 0
 
     def perform_data_tranformation(self):
         True
