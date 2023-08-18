@@ -83,8 +83,10 @@ class InputHandler():
         else:
             return 0
 
-    def perform_data_tranformation(self):
-        True
+    def perform_data_tranformation(self, return_method_output = False):
+
+        for input_sheet in self.model_input_sheets_info:
+            True
 
     def put_model_data(self):
 

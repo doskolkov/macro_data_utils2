@@ -16,7 +16,7 @@ class INFO():
         return f"""{ctry}_DB.xlsx"""
 
     def get_model_path(self, ctry):
-        return f"""{ctry}_Model2.xlsm"""
+        return f"""{ctry}_Model2.xlsx"""
 
     DB_PATH = f'{EXCEL_FOLDER}\Kazakhstan_DB.xlsx'
     MODEL_PATH = f'{EXCEL_FOLDER}\Kazakhstan_Model2.xlsm'
