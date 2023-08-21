@@ -102,7 +102,8 @@ class InputHandler():
         else:
             return 0
 
-
+    def perform_names_transfromation(self):
+        True
 
     def put_model_data(self):
 
