@@ -7,3 +7,4 @@ from Utils.information import ModelOutputUnits as mou
 IH = InputHandler('kzt')
 IH.get_model_inputs()
 IH.get_model_data()
+IH.perform_data_tranformation()

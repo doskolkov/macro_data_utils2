@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import xlrd
+from time import time
 xlrd.xlsx.ensure_elementtree_imported(False, None)
 xlrd.xlsx.Element_has_iter = True
 import warnings
@@ -84,9 +85,24 @@ class InputHandler():
             return 0
 
     def perform_data_tranformation(self, return_method_output = False):
+        start = time()
+        TC = TrasformationsConfig()
+        for transformation in TC.transMethodsDict.keys():
+            method = TC.transMethodsDict.get(transformation).get('method')
+            info_cols = TC.transMethodsDict.get(transformation).get('cols')
+            for input_sheet in self.raw_model_data_to_transform.keys():
+                info_table = self.model_input_sheets_info.get(input_sheet)[[mif.fname]+info_cols]
+                info_dict = info_table.set_index(mif.fname).to_dict()
+                self.model_data[input_sheet] = self.raw_model_data_to_transform.get(input_sheet).apply(lambda x: method(x, info_dict))
+        end = time()
+        all_time = end-start
 
-        for input_sheet in self.model_input_sheets_info:
-            True
+        if return_method_output:
+            return self.model_data
+        else:
+            return 0
+
+
 
     def put_model_data(self):
 
