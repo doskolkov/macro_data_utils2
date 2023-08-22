@@ -90,10 +90,13 @@ class InputHandler():
         for transformation in TC.transMethodsDict.keys():
             method = TC.transMethodsDict.get(transformation).get('method')
             info_cols = TC.transMethodsDict.get(transformation).get('cols')
+            change_name = TC.transMethodsDict.get(transformation).get('change_name')
             for input_sheet in self.raw_model_data_to_transform.keys():
                 info_table = self.model_input_sheets_info.get(input_sheet)[[mif.fname]+info_cols]
                 info_dict = info_table.set_index(mif.fname).to_dict()
                 self.model_data[input_sheet] = self.raw_model_data_to_transform.get(input_sheet).apply(lambda x: method(x, info_dict))
+                if change_name:
+                    self.model_data[input_sheet] = self.model_data[input_sheet].rename(lambda col: col+f' {info_dict.get(change_name).get(col)}', axis = 1)
         end = time()
         all_time = end-start
 
@@ -101,10 +104,6 @@ class InputHandler():
             return self.model_data
         else:
             return 0
-
-    def perform_names_transfromation(self):
-        True
-
     def put_model_data(self):
 
         assert len(self.model_data.keys()) > 0, f'put_model_data level || Model data dict has no keys, should contain either subset of {mou.UnitsValueSet}'
