@@ -103,8 +103,8 @@ class InputHandler():
             info_cols = TC.transMethodsDict.get(transformation).get('cols')
             change_name = TC.transMethodsDict.get(transformation).get('change_name')
             for input_sheet in self.raw_model_data_to_transform.keys():
-                info_table = self.model_input_sheets_info.get(input_sheet)[[mif.fname]+info_cols]
-                info_dict = info_table.set_index(mif.fname).to_dict()
+                info_table = self.model_input_sheets_info.get(input_sheet)[[mif.fname, mif.variable]+info_cols]
+                info_dict = info_table.set_index(mif.variable).to_dict()
                 self.model_data[input_sheet] = self.raw_model_data_to_transform.get(input_sheet).apply(lambda x: method(x, info_dict))
                 if change_name:
                     self.model_data[input_sheet] = self.model_data[input_sheet].rename(lambda col: col+f' {info_dict.get(change_name).get(col)}', axis = 1)
