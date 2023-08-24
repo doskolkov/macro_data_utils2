@@ -2,6 +2,9 @@ from Utils.information import INFO as info
 from Utils.information import ModelInputInfoFields as mif
 from New_code.TimeSeriesTransformations import type_transformations,frequency_transformations,normalization_transformations,seasonal_adjustment_transformations
 
+import warnings
+warnings.filterwarnings("ignore")
+
 class TransformationFunctions():
 
     type_transformations = type_transformations()
@@ -13,8 +16,7 @@ class TransformationFunctions():
         instruction_dict = {}
         for k in instruction.keys():
             instruction_dict[k] = instruction.get(k).get(ts.name)
-        ts = self.type_transformations.get_config().get(mif.transf)
-
+        ts = self.type_transformations.get_config().get(instruction_dict.get(mif.transf))(ts)
         return ts
 
     def freq_transform(self, ts, instruction = None): ### frequency
@@ -44,9 +46,9 @@ class TransformationFunctions():
 class TrasformationsConfig():
     TF = TransformationFunctions()
     transMethodsDict = {
-        'type': {'method':TF.type_transform, 'cols':[mif.transf], 'change_name':mif.is_real},
+        'type': {'method':TF.type_transform, 'cols':[mif.transf], 'change_name':None},
         'freq': {'method':TF.freq_transform, 'cols':[mif.freq, mif.calc], 'change_name':None},
         'norm': {'method':TF.norm_transform, 'cols':[mif.norm_d], 'change_name':None},
-        'sa': {'method':TF.seasadj_transform, 'cols':[mif.is_sa, mif.is_makesa], 'change_name':mif.is_makesa}
+        'sa': {'method':TF.seasadj_transform, 'cols':[mif.is_sa, mif.is_makesa], 'change_name':None}
     }
 

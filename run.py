@@ -2,7 +2,8 @@ from New_code.DataManager import InputHandler
 from Utils.information import INFO as info
 from Utils.information import ModelInputInfoFields as mif
 from Utils.information import ModelOutputUnits as mou
-
+import warnings
+warnings.filterwarnings("ignore")
 
 IH = InputHandler('kzt')
 IH.get_model_inputs()

@@ -6,6 +6,8 @@ xlrd.xlsx.ensure_elementtree_imported(False, None)
 xlrd.xlsx.Element_has_iter = True
 import warnings
 import logging
+import warnings
+warnings.filterwarnings("ignore")
 
 from Utils.information import INFO as info
 from Utils.information import ModelInputInfoFields as mif
@@ -26,6 +28,9 @@ class InputHandler():
 
         self.raw_model_data_stage1 = {}
         self.raw_model_data_to_transform = {}
+
+        self.transformation_stages = []
+
         self.model_data = {}
 
 
@@ -58,38 +63,41 @@ class InputHandler():
         db_sheet_names = xlrd.open_workbook(self.db_path, on_demand=True).sheet_names()
 
         assert len(set.intersection(set(self.db_data_sheets),set(db_sheet_names))) == len(self.db_data_sheets), f'Was not able to find sheets {np.setdiff1d(self.db_unique_input_sheets,db_sheet_names)} in {self.db_path} file'
-
+        stage_dict = {'stage':'s1'}
+        data_dict = {}
         for sheet in self.db_data_sheets:
             try:
                 self.raw_model_data_stage1[sheet] = pd.read_excel(self.db_path,sheet_name=sheet).set_index(info.date_column)
+                data_dict[sheet] = pd.read_excel(self.db_path,sheet_name=sheet).set_index(info.date_column)
             except:
                 raise Exception(f'get_model_data level || There is no date column in sheet {sheet} in file {self.db_path} or it is called incorrectly')
+        stage_dict['data'] = data_dict
+        self.transformation_stages.append(stage_dict)
 
+        stage_dict = {'stage':'pretransform'}
+        data_dict = {}
         for input_sheet in self.model_input_sheets_info.keys():
             current_input = self.model_input_sheets_info.get(input_sheet)
             input_sheet_current_state = pd.DataFrame()
             for source_sheet in list(current_input[mif.input_sheet].unique()):
                 print(f'get_model_data level || constructing raw input sheet; input sheet is {input_sheet}, source sheet is {source_sheet}')
-
                 input_source_sheet = current_input.loc[current_input[mif.input_sheet]==source_sheet]
                 source_sheet_cols_to_select = list(input_source_sheet.loc[~pd.isnull(input_source_sheet[mif.variable])][mif.variable])
 
                 source_sheet_cols = self.raw_model_data_stage1.get(source_sheet).columns
                 var_list_absent_cols = list(input_source_sheet.loc[pd.isnull(input_source_sheet[mif.variable])][mif.fname])
 
-
                 print(f'{len(var_list_absent_cols)} of {len(input_source_sheet)} were not found. These are {var_list_absent_cols}')
-
-
                 if len(input_sheet_current_state.columns) == 0:
                     input_sheet_current_state = self.raw_model_data_stage1.get(source_sheet)[source_sheet_cols_to_select]
                 else:
                     input_sheet_current_state = input_sheet_current_state.join(self.raw_model_data_stage1.get(source_sheet)[source_sheet_cols_to_select])
                 for col in var_list_absent_cols:
                     input_sheet_current_state[col] = None
-
+            data_dict[input_sheet] = input_sheet_current_state
             self.raw_model_data_to_transform[input_sheet] = input_sheet_current_state
-
+        stage_dict['data'] = data_dict
+        self.transformation_stages.append(stage_dict)
         if return_method_output:
             return self.raw_model_data_to_transform
         else:
@@ -99,15 +107,20 @@ class InputHandler():
         start = time()
         TC = TrasformationsConfig()
         for transformation in TC.transMethodsDict.keys():
+            stage_dict = {'stage':transformation}
+            data_dict = {}
+            prev_data_dict = self.transformation_stages[-1].get('data')
             method = TC.transMethodsDict.get(transformation).get('method')
             info_cols = TC.transMethodsDict.get(transformation).get('cols')
             change_name = TC.transMethodsDict.get(transformation).get('change_name')
-            for input_sheet in self.raw_model_data_to_transform.keys():
+            for input_sheet in prev_data_dict.keys():
                 info_table = self.model_input_sheets_info.get(input_sheet)[[mif.fname, mif.variable]+info_cols]
+                info_table[mif.variable] = info_table[mif.variable].fillna(info_table[mif.fname])
                 info_dict = info_table.set_index(mif.variable).to_dict()
-                self.model_data[input_sheet] = self.raw_model_data_to_transform.get(input_sheet).apply(lambda x: method(x, info_dict))
-                if change_name:
-                    self.model_data[input_sheet] = self.model_data[input_sheet].rename(lambda col: col+f' {info_dict.get(change_name).get(col)}', axis = 1)
+                data_dict[input_sheet] = prev_data_dict.get(input_sheet).apply(lambda x: method(x, info_dict))
+            stage_dict['data'] = data_dict
+            self.transformation_stages.append(stage_dict)
+        self.model_data = self.transformation_stages[-1].get('data')
         end = time()
         all_time = end-start
 
