@@ -31,7 +31,10 @@ class InputHandler():
 
     def get_model_inputs(self, return_method_output = False):
         model_sheet_names = xlrd.open_workbook(self.model_path, on_demand=True).sheet_names()
-        inputs_sheet = pd.read_excel(self.model_path, sheet_name='input')#.sort_values(by=mif.fname)
+        inputs_sheet = pd.read_excel(self.model_path, sheet_name='input')
+        var_list = pd.read_excel(self.db_path, sheet_name='var_list')
+        var_list_columns = [mif.variable] + mif.InputInfoCols
+        inputs_sheet = inputs_sheet.merge(var_list[var_list_columns], how='left',left_on=mif.InputInfoCols, right_on=mif.InputInfoCols)
         output_keys = list(inputs_sheet[mif.output_sheet].unique())
         self.db_data_sheets = list(inputs_sheet[mif.input_sheet].unique())
         self.InputVarsTranformDict = inputs_sheet[mif.InputInstructionCols].set_index(mif.fname).to_dict()
@@ -55,6 +58,7 @@ class InputHandler():
         db_sheet_names = xlrd.open_workbook(self.db_path, on_demand=True).sheet_names()
 
         assert len(set.intersection(set(self.db_data_sheets),set(db_sheet_names))) == len(self.db_data_sheets), f'Was not able to find sheets {np.setdiff1d(self.db_unique_input_sheets,db_sheet_names)} in {self.db_path} file'
+
         for sheet in self.db_data_sheets:
             try:
                 self.raw_model_data_stage1[sheet] = pd.read_excel(self.db_path,sheet_name=sheet).set_index(info.date_column)
@@ -66,17 +70,24 @@ class InputHandler():
             input_sheet_current_state = pd.DataFrame()
             for source_sheet in list(current_input[mif.input_sheet].unique()):
                 print(f'get_model_data level || constructing raw input sheet; input sheet is {input_sheet}, source sheet is {source_sheet}')
-                source_sheet_cols_to_select = list(current_input.loc[current_input[mif.input_sheet]==source_sheet][mif.fname])
+
+                input_source_sheet = current_input.loc[current_input[mif.input_sheet]==source_sheet]
+                source_sheet_cols_to_select = list(input_source_sheet.loc[~pd.isnull(input_source_sheet[mif.variable])][mif.variable])
+
                 source_sheet_cols = self.raw_model_data_stage1.get(source_sheet).columns
-                not_present_source_sheet_cols = np.setdiff1d(source_sheet_cols_to_select, source_sheet_cols)
-                print(f'{len(not_present_source_sheet_cols)} of {len(source_sheet_cols_to_select)} were not found. These are {not_present_source_sheet_cols}')
-                source_sheet_cols_to_select = list(set(source_sheet_cols_to_select)-set(not_present_source_sheet_cols))
+                var_list_absent_cols = list(input_source_sheet.loc[pd.isnull(input_source_sheet[mif.variable])][mif.fname])
+
+
+                print(f'{len(var_list_absent_cols)} of {len(input_source_sheet)} were not found. These are {var_list_absent_cols}')
+
+
                 if len(input_sheet_current_state.columns) == 0:
                     input_sheet_current_state = self.raw_model_data_stage1.get(source_sheet)[source_sheet_cols_to_select]
                 else:
                     input_sheet_current_state = input_sheet_current_state.join(self.raw_model_data_stage1.get(source_sheet)[source_sheet_cols_to_select])
-                for col in not_present_source_sheet_cols:
+                for col in var_list_absent_cols:
                     input_sheet_current_state[col] = None
+
             self.raw_model_data_to_transform[input_sheet] = input_sheet_current_state
 
         if return_method_output:

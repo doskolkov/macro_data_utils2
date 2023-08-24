@@ -3,7 +3,7 @@ from Utils.information import ModelInputInfoFields as mif
 
 class TransformationFunctions():
 
-    def type_transform(self, ts, instruction = None):
+    def type_transform(self, ts, instruction = None): ### index, value, rate
         instruction_dict = {}
         for k in instruction.keys():
             instruction_dict[k] = instruction.get(k).get(ts.name)
@@ -11,7 +11,7 @@ class TransformationFunctions():
 
         return ts
 
-    def freq_transform(self, ts, instruction = None):
+    def freq_transform(self, ts, instruction = None): ### frequency
         instruction_dict = {}
         for k in instruction.keys():
             instruction_dict[k] = instruction.get(k).get(ts.name)
@@ -19,7 +19,7 @@ class TransformationFunctions():
 
         return ts
 
-    def norm_transform(self, ts, instruction = None):
+    def norm_transform(self, ts, instruction = None): ### normalization
         instruction_dict = {}
         for k in instruction.keys():
             instruction_dict[k] = instruction.get(k).get(ts.name)
@@ -27,7 +27,7 @@ class TransformationFunctions():
 
         return ts
 
-    def seasadj_transform(self, ts, instruction = None):
+    def seasadj_transform(self, ts, instruction = None): ### seasonal adjustment
         instruction_dict = {}
         for k in instruction.keys():
             instruction_dict[k] = instruction.get(k).get(ts.name)

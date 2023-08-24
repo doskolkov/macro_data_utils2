@@ -16,7 +16,7 @@ class INFO():
         return f"""{ctry}_DB.xlsx"""
 
     def get_model_path(self, ctry):
-        return f"""{ctry}_Model2.xlsx"""
+        return f"""{ctry}_Model2.xlsm"""
 
     DB_PATH = f'{EXCEL_FOLDER}\Kazakhstan_DB.xlsx'
     MODEL_PATH = f'{EXCEL_FOLDER}\Kazakhstan_Model2.xlsm'
@@ -38,7 +38,8 @@ class ModelInputInfoFields():
     de = "end"
     norm_d = "norm"
     output_sheet = "output_sheet"
-
+    variable = "variable"
+    InputInfoCols = [fname, is_real, is_sa]
     InputInstructionCols = [fname,input_sheet,output_sheet,is_real,is_sa,transf,calc,is_makesa,freq,ds,de,norm_d]
 
 class ModelOutputUnits():
