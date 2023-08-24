@@ -12,14 +12,30 @@ class TransformationFunctions():
     normalization_transformations = normalization_transformations()
     seasonal_adjustment_transformations = seasonal_adjustment_transformations()
 
+    application_history = []
+
     def type_transform(self, ts, instruction = None): ### index, value, rate
-        instruction_dict = {}
-        for k in instruction.keys():
-            instruction_dict[k] = instruction.get(k).get(ts.name)
-        ts = self.type_transformations.get_config().get(instruction_dict.get(mif.transf))(ts)
+        tname = 'type'
+        if instruction:
+            try:
+                instruction_dict = {}
+                for k in instruction.keys():
+                    instruction_dict[k] = instruction.get(k).get(ts.name)
+                ts = self.type_transformations.get_config().get(instruction_dict.get(mif.transf))(ts)
+                status = 0
+                message = None
+            except:
+                status = 1
+                message = "Method transformation was not performed, instruction was passed"
+        else:
+            status = 1
+            message = "Method transformation was not performed, instruction was not passed"
+        self.application_history.append({'transformation':tname,'series_name':ts.name,'status':status,'message':message})
+
         return ts
 
-    def freq_transform(self, ts, instruction = None): ### frequency
+    def freq_transform(self, ts, instruction = None):### frequency
+        tname = 'freq'
         instruction_dict = {}
         for k in instruction.keys():
             instruction_dict[k] = instruction.get(k).get(ts.name)
@@ -28,6 +44,7 @@ class TransformationFunctions():
         return ts
 
     def norm_transform(self, ts, instruction = None): ### normalization
+        tname = 'freq'
         instruction_dict = {}
         for k in instruction.keys():
             instruction_dict[k] = instruction.get(k).get(ts.name)
@@ -36,6 +53,7 @@ class TransformationFunctions():
         return ts
 
     def seasadj_transform(self, ts, instruction = None): ### seasonal adjustment
+        tname = 'freq'
         instruction_dict = {}
         for k in instruction.keys():
             instruction_dict[k] = instruction.get(k).get(ts.name)
