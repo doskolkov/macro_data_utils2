@@ -21,8 +21,8 @@ class type_transformations():
         '''
         config = {
             'index': self.series_to_index,
-            'rate': self.series_to_rate,
-            'value': self.value_to_value,
+            'rate': self.unity_transformation,
+            'value': self.unity_transformation,
             'index_to_rate': self.index_to_rate,
             'yoy': self.yoy_change,
             'ytd': self.ytd_accumulated,
@@ -31,7 +31,7 @@ class type_transformations():
         return config
     def series_to_index(self, ts, norm_value = 100):
         '''
-        !!!! nans may not be touched
+        transforms series to index. nan values are ignored.
         Args:
             ts: pd.timeseries indexed with dates
             norm_value: index normalization value
@@ -39,8 +39,10 @@ class type_transformations():
         Returns: pd.timeseries indexed with dates
 
         '''
-        trs = ts/ts.shift(1)
-        index_ts = trs.fillna(1).cumprod()*norm_value
+        work_ts = ts.dropna()
+        trs = work_ts/work_ts.shift(1)
+        raw_index_ts = trs.fillna(1).cumprod()*norm_value
+        index_ts = ts.apply(lambda x: np.nan).fillna(raw_index_ts)
         return index_ts
     def series_to_rate(self, ts): # не меняем
         '''
@@ -88,7 +90,8 @@ class type_transformations():
         return yoy_ts
     def ytd_accumulated(self, ts):
         '''
-        calculates year-to-date sum of a ts
+        calculates year-to-date sum of a ts.
+        !!!!  nans may be wrong
         Args:
             ts: pd.timeseries indexed by dates
 
@@ -120,6 +123,8 @@ class type_transformations():
         pp_ts = orig_df[[datecol,'pp_change']].set_index(datecol)['pp_change']
         return pp_ts
 
+    def unity_transformation(self, ts):
+        return ts
 
     # ['yoy' - over same period from last year
 
@@ -130,8 +135,37 @@ class frequency_transformations():
 class normalization_transformations():
 
     def get_config(self):
-        config = {}
+        config = {
+            'index':self.index_normalization,
+            'rate':self.unity_transformation,
+            'value':self.unity_transformation,
+            'yoy':self.unity_transformation,
+            'ytd':self.unity_transformation,
+            'pp':self.unity_transformation
+        }
+        return config
+    def index_normalization(self, ts, norm_date, norm_value=100):
+        '''
+        !!! If norm_date value is null, it should choose other norm_date
+        Args:
+            ts:
+            norm_date:
+            norm_value:
 
+        Returns:
+
+        '''
+
+        if pd.isnull(ts[norm_date]):
+            norm_ts = ts
+        else:
+            norm_ts = ts / ts[norm_date] * norm_value
+
+        return norm_ts
+
+    def unity_transformation(self, ts, norm_date):
+
+        return ts
 class seasonal_adjustment_transformations():
 
     def get_config(self):
