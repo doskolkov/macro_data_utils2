@@ -148,13 +148,27 @@ class frequency_transformations():
         return config
     def weekly_eop(self,ts):
         freq = self.get_series_frequency(ts)
+        if freq not in ['w','d']:
+            raise FrequencyException(f"Cannot convert given frequency {freq} to weekly")
+
+        if freq == 'w':
+            True
+        elif freq == 'd':
+            True
+
         return ts
     def monthly_eop(self,ts):
         freq = self.get_series_frequency(ts)
+        if freq not in ['w','d','m']:
+            raise FrequencyException(f"Cannot convert given frequency {freq} to weekly")
+
         return ts
 
     def quarterly_eop(self, ts):
         freq = self.get_series_frequency(ts)
+        if freq not in ['w','d','m','q']:
+            raise FrequencyException(f"Cannot convert given frequency {freq} to weekly")
+
         return ts
 
     def annual_eop(self, ts):
@@ -162,12 +176,21 @@ class frequency_transformations():
         return ts
     def weekly_avr(self, ts):
         freq = self.get_series_frequency(ts)
+        if freq not in ['w','d']:
+            raise FrequencyException(f"Cannot convert given frequency {freq} to weekly")
+
         return ts
     def monthly_avr(self, ts):
         freq = self.get_series_frequency(ts)
+        if freq not in ['w','d','m']:
+            raise FrequencyException(f"Cannot convert given frequency {freq} to monthly")
+
         return ts
     def quarterly_avr(self, ts):
         freq = self.get_series_frequency(ts)
+        if freq not in ['w','d','m','q']:
+            raise FrequencyException(f"Cannot convert given frequency {freq} to quarterly")
+
         return ts
 
     def annual_avr(self, ts):
@@ -175,13 +198,22 @@ class frequency_transformations():
         return ts
     def weekly_sum(self, ts):
         freq = self.get_series_frequency(ts)
+        if freq not in ['w','d']:
+            raise FrequencyException(f"Cannot convert given frequency {freq} to weekly")
+
         return ts
     def monthly_sum(self, ts):
         freq = self.get_series_frequency(ts)
+        if freq not in ['w','d','m']:
+            raise FrequencyException(f"Cannot convert given frequency {freq} to monthly")
+
         return ts
 
     def quarterly_sum(self, ts):
         freq = self.get_series_frequency(ts)
+        if freq not in ['w','d','m','q']:
+            raise FrequencyException(f"Cannot convert given frequency {freq} to quarterly")
+
         return ts
 
     def annual_sum(self, ts):
@@ -256,3 +288,6 @@ class seasonal_adjustment_transformations():
     def unity_transformation(self, ts):
 
         return ts
+
+class FrequencyException(Exception):
+    pass

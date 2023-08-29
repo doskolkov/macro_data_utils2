@@ -78,8 +78,10 @@ class InputHandler():
         data_dict = {}
         for input_sheet in self.model_input_sheets_info.keys():
             current_input = self.model_input_sheets_info.get(input_sheet)
-            input_sheet_current_state = pd.DataFrame()
+
+            input_sheet_data_current_state = {}
             for source_sheet in list(current_input[mif.input_sheet].unique()):
+                # input_sheet_current_state = pd.DataFrame()
                 print(f'get_model_data level || constructing raw input sheet; input sheet is {input_sheet}, source sheet is {source_sheet}')
                 input_source_sheet = current_input.loc[current_input[mif.input_sheet]==source_sheet]
                 source_sheet_cols_to_select = list(input_source_sheet.loc[~pd.isnull(input_source_sheet[mif.variable])][mif.variable])
@@ -88,14 +90,13 @@ class InputHandler():
                 var_list_absent_cols = list(input_source_sheet.loc[pd.isnull(input_source_sheet[mif.variable])][mif.fname])
 
                 print(f'{len(var_list_absent_cols)} of {len(input_source_sheet)} were not found. These are {var_list_absent_cols}')
-                if len(input_sheet_current_state.columns) == 0:
-                    input_sheet_current_state = self.raw_model_data_stage1.get(source_sheet)[source_sheet_cols_to_select]
-                else:
-                    input_sheet_current_state = input_sheet_current_state.join(self.raw_model_data_stage1.get(source_sheet)[source_sheet_cols_to_select])
+
+                input_sheet_data_current_state[source_sheet] = self.raw_model_data_stage1.get(source_sheet)[source_sheet_cols_to_select]
+
                 for col in var_list_absent_cols:
-                    input_sheet_current_state[col] = None
-            data_dict[input_sheet] = input_sheet_current_state
-            self.raw_model_data_to_transform[input_sheet] = input_sheet_current_state
+                    input_sheet_data_current_state[source_sheet][col] = None
+            data_dict[input_sheet] = input_sheet_data_current_state
+            self.raw_model_data_to_transform[input_sheet] = input_sheet_data_current_state
         stage_dict['data'] = data_dict
         self.transformation_stages.append(stage_dict)
         if return_method_output:
@@ -114,12 +115,28 @@ class InputHandler():
             info_cols = TC.transMethodsDict.get(transformation).get('cols')
             change_name = TC.transMethodsDict.get(transformation).get('change_name')
             for input_sheet in prev_data_dict.keys():
-                info_table = self.model_input_sheets_info.get(input_sheet)[[mif.fname, mif.variable]+info_cols]
+                info_table = self.model_input_sheets_info.get(input_sheet)[[mif.fname, mif.variable] + info_cols]
                 info_table[mif.variable] = info_table[mif.variable].fillna(info_table[mif.fname])
                 info_dict = info_table.set_index(mif.variable).to_dict()
-                data_dict[input_sheet] = prev_data_dict.get(input_sheet).apply(lambda x: method(x, info_dict))
+                input_sheet_current_state = {}
+                for source_sheet in prev_data_dict.get(input_sheet).keys():
+                    input_sheet_current_state[source_sheet] = prev_data_dict.get(input_sheet).get(source_sheet).apply(lambda x: method(x, info_dict))
+                data_dict[input_sheet] = input_sheet_current_state
             stage_dict['data'] = data_dict
             self.transformation_stages.append(stage_dict)
+
+        stage_dict = {'stage':'input sheet final join'}
+        data_dict = {}
+        prev_data_dict = self.transformation_stages[-1].get('data')
+        for input_sheet in prev_data_dict.keys():
+            input_sheet_current_state = pd.DataFrame()
+            for source_sheet in prev_data_dict.get(input_sheet).keys():
+                if len(input_sheet_current_state) == 0:
+                    input_sheet_current_state = prev_data_dict.get(input_sheet).get(source_sheet)
+                else:
+                    input_sheet_current_state = input_sheet_current_state.join(prev_data_dict.get(input_sheet).get(source_sheet))
+            data_dict[input_sheet] = input_sheet_current_state
+        stage_dict['data'] = data_dict
         self.model_data = self.transformation_stages[-1].get('data')
         end = time()
         all_time = end-start

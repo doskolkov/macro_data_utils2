@@ -7,6 +7,7 @@ from Utils.information import ModelInputInfoFields as mif
 from Utils.information import ModelOutputUnits as mou
 
 from New_code.TimeSeriesTransformations import type_transformations, normalization_transformations, frequency_transformations
+from New_code.TimeSeriesTransformations import FrequencyException
 
 import warnings
 import random
@@ -68,7 +69,6 @@ vals = [init_val]
 dates = [sd]
 for t in range(1, 360,1):
     dates.append(sd+relativedelta(years=+1*t))
-    # dates = [datetime.datetime.fromtimestamp(d) for d in dates]
     vals.append(vals[-1]*(1+0.005))
 year_ts = pd.DataFrame({'dates': dates, 'vals': vals}).set_index('dates')['vals']
 null_year_ts = year_ts.apply(lambda x: np.nan)
@@ -78,7 +78,7 @@ instance_dict = {
     'norm':normalization_transformations(),
     'freq':frequency_transformations()
 }
-ft_key = "monthly_eop"
+ft_key = "weekly_eop"
 def test_transform_method(sample_ts,null_ts,instance,method, norm_date = None):
 
     config = instance_dict.get(instance).get_config()
@@ -94,9 +94,10 @@ def test_transform_method(sample_ts,null_ts,instance,method, norm_date = None):
         null_res = ap_method(null_ts)
     return res, null_res
 # test_transform_method(sample_ts)
-res = instance_dict.get('freq').get_series_frequency(day_ts)
-# res, null_res = test_transform_method(sample_ts, null_ts, 'norm','index', norm_date=nd)
-# res, null_res = test_transform_method(sample_ts, null_ts, instance='freq', method = 'quarterly_eop')
+# res = instance_dict.get('freq').get_series_frequency(day_ts)
+# res, null_res = test_transform_method(sample_ts, null_ts, 'freq','index', norm_date=nd)
+# res, null_res = test_transform_method(month_ts, null_ts, instance='freq', method = ft_key)
+
 # test_result = pd.DataFrame({'sample':sample_ts,'sample_res':res,'null':null_ts,'null_res':null_res})
 
 IH = InputHandler('kzt')

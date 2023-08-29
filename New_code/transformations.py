@@ -1,6 +1,7 @@
 from Utils.information import INFO as info
 from Utils.information import ModelInputInfoFields as mif
 from New_code.TimeSeriesTransformations import type_transformations,frequency_transformations,normalization_transformations,seasonal_adjustment_transformations
+from New_code.TimeSeriesTransformations import FrequencyException
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -24,9 +25,9 @@ class TransformationFunctions():
                 ts = self.type_transformations.get_config().get(instruction_dict.get(mif.transf))(ts)
                 status = 0
                 message = None
-            except:
+            except Exception as e:
                 status = 1
-                message = "Method transformation was not performed, instruction was passed"
+                message = e.args[0]
         else:
             status = 1
             message = "Method transformation was not performed, instruction was not passed"
@@ -44,9 +45,12 @@ class TransformationFunctions():
                 ts = self.frequency_transformations.get_config().get(f'{instruction_dict.get(mif.freq)}_{instruction_dict.get(mif.calc)}')(ts)
                 status = 0
                 message = None
-            except:
+            except FrequencyException as fe:
                 status = 1
-                message = "Method transformation was not performed, instruction was passed"
+                message = fe.args[0]
+            except Exception as e:
+                status = 1
+                message = e.args[0]
         else:
             status = 1
             message = "Method transformation was not performed, instruction was not passed"
@@ -66,9 +70,9 @@ class TransformationFunctions():
                                                                                                                mif.norm_d))
                 status = 0
                 message = None
-            except:
+            except Exception as e:
                 status = 1
-                message = "Method transformation was not performed, instruction was passed"
+                message = e.args[0]
         else:
             status = 1
             message = "Method transformation was not performed, instruction was not passed"
