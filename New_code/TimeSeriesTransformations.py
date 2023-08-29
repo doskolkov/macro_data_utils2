@@ -3,6 +3,7 @@ from Utils.information import ModelInputInfoFields as mif
 
 import numpy as np
 import pandas as pd
+from datetime import datetime
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -130,7 +131,86 @@ class type_transformations():
 
 class frequency_transformations():
     def get_config(self):
-        config = {}
+        config = {
+            'weekly_eop':self.weekly_eop,
+            'monthly_eop':self.monthly_eop,
+            'quarterly_eop':self.quarterly_eop,
+            'annual_eop':self.annual_eop,
+            'weekly_avr':self.weekly_avr,
+            'monthly_avr':self.monthly_avr,
+            'quarterly_avr':self.quarterly_avr,
+            'annual_avr':self.annual_avr,
+            'weekly_sum':self.weekly_sum,
+            'monthly_sum':self.monthly_sum,
+            'quarterly_sum':self.quarterly_sum,
+            'annual_sum':self.annual_sum
+        }
+        return config
+    def weekly_eop(self,ts):
+        freq = self.get_series_frequency(ts)
+        return ts
+    def monthly_eop(self,ts):
+        freq = self.get_series_frequency(ts)
+        return ts
+
+    def quarterly_eop(self, ts):
+        freq = self.get_series_frequency(ts)
+        return ts
+
+    def annual_eop(self, ts):
+        freq = self.get_series_frequency(ts)
+        return ts
+    def weekly_avr(self, ts):
+        freq = self.get_series_frequency(ts)
+        return ts
+    def monthly_avr(self, ts):
+        freq = self.get_series_frequency(ts)
+        return ts
+    def quarterly_avr(self, ts):
+        freq = self.get_series_frequency(ts)
+        return ts
+
+    def annual_avr(self, ts):
+        freq = self.get_series_frequency(ts)
+        return ts
+    def weekly_sum(self, ts):
+        freq = self.get_series_frequency(ts)
+        return ts
+    def monthly_sum(self, ts):
+        freq = self.get_series_frequency(ts)
+        return ts
+
+    def quarterly_sum(self, ts):
+        freq = self.get_series_frequency(ts)
+        return ts
+
+    def annual_sum(self, ts):
+        freq = self.get_series_frequency(ts)
+        return ts
+    def unity_transformation(self, ts):
+
+        return ts
+
+    def get_series_frequency(self, ts):
+        ts_df = pd.DataFrame({'value': ts}).reset_index()
+        datecol = ts_df.columns[0]
+        try:
+            ts_df[datecol] = ts_df[datecol].apply(lambda x: x.to_pydatetime())
+            date_diff_ts = [d.astype('timedelta64[D]') / np.timedelta64(1, 'D') for d in np.diff(ts_df[datecol])]
+        except:
+            date_diff_ts = [d.days for d in np.diff(ts_df[datecol])]
+        ts_df['year'] = ts_df[datecol].apply(lambda x: x.year)
+        ts_df['month'] = ts_df[datecol].apply(lambda x: x.month)
+        if min(date_diff_ts)<5:
+            return 'd'
+        elif min(date_diff_ts)<10:
+            return 'w'
+        elif min(date_diff_ts)<65:
+            return 'm'
+        elif min(date_diff_ts)<120:
+            return 'q'
+        elif min(date_diff_ts)>250:
+            return 'y'
 
 class normalization_transformations():
 
@@ -169,4 +249,10 @@ class normalization_transformations():
 class seasonal_adjustment_transformations():
 
     def get_config(self):
-        config = {}
+        config = {
+            'sa':self.unity_transformation
+        }
+        return config
+    def unity_transformation(self, ts):
+
+        return ts

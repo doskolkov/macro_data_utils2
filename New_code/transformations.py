@@ -36,10 +36,21 @@ class TransformationFunctions():
 
     def freq_transform(self, ts, instruction = None):### frequency
         tname = 'freq'
-        instruction_dict = {}
-        for k in instruction.keys():
-            instruction_dict[k] = instruction.get(k).get(ts.name)
-        ts *= 1
+        if instruction:
+            try:
+                instruction_dict = {}
+                for k in instruction.keys():
+                    instruction_dict[k] = instruction.get(k).get(ts.name)
+                ts = self.frequency_transformations.get_config().get(f'{instruction_dict.get(mif.freq)}_{instruction_dict.get(mif.calc)}')(ts)
+                status = 0
+                message = None
+            except:
+                status = 1
+                message = "Method transformation was not performed, instruction was passed"
+        else:
+            status = 1
+            message = "Method transformation was not performed, instruction was not passed"
+        self.application_history.append({'transformation':tname,'series_name':ts.name,'status':status,'message':message})
 
         return ts
 
