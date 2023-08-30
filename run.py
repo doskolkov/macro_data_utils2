@@ -78,7 +78,7 @@ instance_dict = {
     'norm':normalization_transformations(),
     'freq':frequency_transformations()
 }
-ft_key = "weekly_eop"
+ft_key = "weekly_sum"
 def test_transform_method(sample_ts,null_ts,instance,method, norm_date = None):
 
     config = instance_dict.get(instance).get_config()
@@ -96,9 +96,9 @@ def test_transform_method(sample_ts,null_ts,instance,method, norm_date = None):
 # test_transform_method(sample_ts)
 # res = instance_dict.get('freq').get_series_frequency(day_ts)
 # res, null_res = test_transform_method(sample_ts, null_ts, 'freq','index', norm_date=nd)
-# res, null_res = test_transform_method(month_ts, null_ts, instance='freq', method = ft_key)
+res, null_res = test_transform_method(day_ts, null_day_ts, instance='freq', method = ft_key)
 
-# test_result = pd.DataFrame({'sample':sample_ts,'sample_res':res,'null':null_ts,'null_res':null_res})
+test_result = pd.DataFrame({'sample':day_ts,'sample_res':res,'null':null_day_ts,'null_res':null_res})
 
 IH = InputHandler('kzt')
 IH.get_model_inputs()

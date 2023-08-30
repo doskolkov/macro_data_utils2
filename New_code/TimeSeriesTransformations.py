@@ -151,23 +151,26 @@ class frequency_transformations():
         if freq not in ['w','d']:
             raise FrequencyException(f"Cannot convert given frequency {freq} to weekly")
 
-        if freq == 'w':
-            True
         elif freq == 'd':
-            True
+            orig_df = pd.DataFrame({'value':ts}).reset_index()
+            datecol = orig_df.columns[0]
+            orig_df['day'] = orig_df[datecol].apply(lambda x: x.weekday())
+            orig_df['week'] = orig_df[datecol].apply(lambda x: x.week)
+            orig_df = orig_df.merge(orig_df.groupby('week')['day'].max().reset_index().rename(columns={'day':'max_week_day'}), how = 'left', left_on = 'week',right_on='week')
+            ts = orig_df.loc[orig_df['day']==orig_df['max_week_day']][[datecol,'value']].set_index(datecol)['value']
 
         return ts
     def monthly_eop(self,ts):
         freq = self.get_series_frequency(ts)
         if freq not in ['w','d','m']:
-            raise FrequencyException(f"Cannot convert given frequency {freq} to weekly")
+            raise FrequencyException(f"Cannot convert given frequency {freq} to monthly")
 
         return ts
 
     def quarterly_eop(self, ts):
         freq = self.get_series_frequency(ts)
         if freq not in ['w','d','m','q']:
-            raise FrequencyException(f"Cannot convert given frequency {freq} to weekly")
+            raise FrequencyException(f"Cannot convert given frequency {freq} to quarterly")
 
         return ts
 
@@ -178,6 +181,17 @@ class frequency_transformations():
         freq = self.get_series_frequency(ts)
         if freq not in ['w','d']:
             raise FrequencyException(f"Cannot convert given frequency {freq} to weekly")
+
+        if freq == 'd':
+            orig_df = pd.DataFrame({'value':ts}).reset_index()
+            datecol = orig_df.columns[0]
+            orig_df['day'] = orig_df[datecol].apply(lambda x: x.weekday())
+            orig_df['week'] = orig_df[datecol].apply(lambda x: x.week)
+            orig_df = orig_df.merge(
+                orig_df.groupby('week')['day'].max().reset_index().rename(columns={'day': 'max_week_day'}), how='left',
+                left_on='week', right_on='week')
+            orig_df = orig_df.merge(orig_df.groupby('week')['value'].mean().reset_index().rename(columns={'value':'week_avr_value'}), how='left',left_on='week',right_on='week')
+            ts = orig_df.loc[orig_df['day']==orig_df['max_week_day']][[datecol,'week_avr_value']].set_index(datecol)['week_avr_value']
 
         return ts
     def monthly_avr(self, ts):
@@ -198,8 +212,22 @@ class frequency_transformations():
         return ts
     def weekly_sum(self, ts):
         freq = self.get_series_frequency(ts)
-        if freq not in ['w','d']:
+        if freq not in ['w', 'd']:
             raise FrequencyException(f"Cannot convert given frequency {freq} to weekly")
+
+        if freq == 'd':
+            orig_df = pd.DataFrame({'value': ts}).reset_index()
+            datecol = orig_df.columns[0]
+            orig_df['day'] = orig_df[datecol].apply(lambda x: x.weekday())
+            orig_df['week'] = orig_df[datecol].apply(lambda x: x.week)
+            orig_df = orig_df.merge(
+                orig_df.groupby('week')['day'].max().reset_index().rename(columns={'day': 'max_week_day'}), how='left',
+                left_on='week', right_on='week')
+            orig_df = orig_df.merge(
+                orig_df.groupby('week')['value'].sum().reset_index().rename(columns={'value': 'week_avr_value'}),
+                how='left', left_on='week', right_on='week')
+            ts = orig_df.loc[orig_df['day'] == orig_df['max_week_day']][[datecol, 'week_avr_value']].set_index(datecol)[
+                'week_avr_value']
 
         return ts
     def monthly_sum(self, ts):
