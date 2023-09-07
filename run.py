@@ -40,10 +40,12 @@ null_month_ts = null_ts
 
 vals = [init_val]
 dates = [sd]
-for t in range(1, 360,1):
+for t in range(1, 900,1):
     dates.append(sd+relativedelta(days=+1*t))
     # dates = [datetime.datetime.fromtimestamp(d) for d in dates]
     vals.append(vals[-1]*(1+0.005))
+for t in rand_indexes:
+    vals[t] = np.nan
 day_ts = pd.DataFrame({'dates': dates, 'vals': vals}).set_index('dates')['vals']
 null_day_ts = day_ts.apply(lambda x: np.nan)
 
@@ -53,6 +55,8 @@ for t in range(1, 360,1):
     dates.append(sd+relativedelta(weeks=+1*t))
     # dates = [datetime.datetime.fromtimestamp(d) for d in dates]
     vals.append(vals[-1]*(1+0.005))
+for t in rand_indexes:
+    vals[t] = np.nan
 week_ts = pd.DataFrame({'dates': dates, 'vals': vals}).set_index('dates')['vals']
 null_week_ts = week_ts.apply(lambda x: np.nan)
 
@@ -62,6 +66,8 @@ for t in range(1, 360,1):
     dates.append(sd+relativedelta(months=+3*t))
     # dates = [datetime.datetime.fromtimestamp(d) for d in dates]
     vals.append(vals[-1]*(1+0.005))
+for t in rand_indexes:
+    vals[t] = np.nan
 quart_ts = pd.DataFrame({'dates': dates, 'vals': vals}).set_index('dates')['vals']
 null_quart_ts = quart_ts.apply(lambda x: np.nan)
 
@@ -70,6 +76,8 @@ dates = [sd]
 for t in range(1, 360,1):
     dates.append(sd+relativedelta(years=+1*t))
     vals.append(vals[-1]*(1+0.005))
+for t in rand_indexes:
+    vals[t] = np.nan
 year_ts = pd.DataFrame({'dates': dates, 'vals': vals}).set_index('dates')['vals']
 null_year_ts = year_ts.apply(lambda x: np.nan)
 
@@ -78,7 +86,7 @@ instance_dict = {
     'norm':normalization_transformations(),
     'freq':frequency_transformations()
 }
-ft_key = "weekly_sum"
+ft_key = "monthly_sum"
 def test_transform_method(sample_ts,null_ts,instance,method, norm_date = None):
 
     config = instance_dict.get(instance).get_config()
@@ -96,9 +104,12 @@ def test_transform_method(sample_ts,null_ts,instance,method, norm_date = None):
 # test_transform_method(sample_ts)
 # res = instance_dict.get('freq').get_series_frequency(day_ts)
 # res, null_res = test_transform_method(sample_ts, null_ts, 'freq','index', norm_date=nd)
-res, null_res = test_transform_method(day_ts, null_day_ts, instance='freq', method = ft_key)
 
-test_result = pd.DataFrame({'sample':day_ts,'sample_res':res,'null':null_day_ts,'null_res':null_res})
+
+
+res, null_res = test_transform_method(week_ts, null_week_ts, instance='freq', method = ft_key)
+
+test_result = pd.DataFrame({'sample':week_ts,'sample_res':res,'null':null_week_ts,'null_res':null_res})
 
 IH = InputHandler('kzt')
 IH.get_model_inputs()
