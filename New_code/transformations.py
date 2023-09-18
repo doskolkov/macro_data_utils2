@@ -17,11 +17,11 @@ class TransformationFunctions():
 
     def type_transform(self, ts, instruction = None): ### index, value, rate
         tname = 'type'
+        instruction_dict = {}
         if instruction:
+            for k in instruction.keys():
+                instruction_dict[k] = instruction.get(k).get(ts.name)
             try:
-                instruction_dict = {}
-                for k in instruction.keys():
-                    instruction_dict[k] = instruction.get(k).get(ts.name)
                 ts = self.type_transformations.get_config().get(instruction_dict.get(mif.transf))(ts)
                 status = 0
                 message = None
@@ -31,17 +31,17 @@ class TransformationFunctions():
         else:
             status = 1
             message = "Method transformation was not performed, instruction was not passed"
-        self.application_history.append({'transformation':tname,'series_name':ts.name,'status':status,'message':message})
+        self.application_history.append({'transformation family':'type','transformation':instruction_dict.get(mif.transf),'series_name':ts.name,'status':status,'message':message})
 
         return ts
 
     def freq_transform(self, ts, instruction = None):### frequency
         tname = 'freq'
+        instruction_dict = {}
         if instruction:
+            for k in instruction.keys():
+                instruction_dict[k] = instruction.get(k).get(ts.name)
             try:
-                instruction_dict = {}
-                for k in instruction.keys():
-                    instruction_dict[k] = instruction.get(k).get(ts.name)
                 ts = self.frequency_transformations.get_config().get(f'{instruction_dict.get(mif.freq)}_{instruction_dict.get(mif.calc)}')(ts)
                 status = 0
                 message = None
@@ -54,17 +54,17 @@ class TransformationFunctions():
         else:
             status = 1
             message = "Method transformation was not performed, instruction was not passed"
-        self.application_history.append({'transformation':tname,'series_name':ts.name,'status':status,'message':message})
+        self.application_history.append({'transformation family':'freq','transformation':f'{instruction_dict.get(mif.freq)}_{instruction_dict.get(mif.calc)}','series_name':ts.name,'status':status,'message':message})
 
         return ts
 
     def norm_transform(self, ts, instruction = None): ### normalization
         tname = 'norm'
+        instruction_dict = {}
         if instruction:
+            for k in instruction.keys():
+                instruction_dict[k] = instruction.get(k).get(ts.name)
             try:
-                instruction_dict = {}
-                for k in instruction.keys():
-                    instruction_dict[k] = instruction.get(k).get(ts.name)
                 ts = self.normalization_transformations.get_config().get(instruction_dict.get(mif.transf))(ts,
                                                                                                            instruction_dict.get(
                                                                                                                mif.norm_d))
@@ -76,7 +76,7 @@ class TransformationFunctions():
         else:
             status = 1
             message = "Method transformation was not performed, instruction was not passed"
-        self.application_history.append({'transformation':tname,'series_name':ts.name,'status':status,'message':message})
+        self.application_history.append({'transformation family':'norm','transformation':instruction_dict.get(mif.transf),'series_name':ts.name,'status':status,'message':message})
 
         return ts
 

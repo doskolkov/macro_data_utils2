@@ -104,7 +104,7 @@ class InputHandler():
         else:
             return 0
 
-    def perform_data_tranformation(self, return_method_output = False):
+    def perform_data_transformation(self, return_method_output = False):
         start = time()
         TC = TrasformationsConfig()
         for transformation in TC.transMethodsDict.keys():
@@ -115,6 +115,7 @@ class InputHandler():
             info_cols = TC.transMethodsDict.get(transformation).get('cols')
             change_name = TC.transMethodsDict.get(transformation).get('change_name')
             for input_sheet in prev_data_dict.keys():
+                print(f"preform_data_transformation level || performing {transformation} to {input_sheet} input sheet data")
                 info_table = self.model_input_sheets_info.get(input_sheet)[[mif.fname, mif.variable] + info_cols]
                 info_table[mif.variable] = info_table[mif.variable].fillna(info_table[mif.fname])
                 info_dict = info_table.set_index(mif.variable).to_dict()
@@ -122,6 +123,8 @@ class InputHandler():
                 for source_sheet in prev_data_dict.get(input_sheet).keys():
                     input_sheet_current_state[source_sheet] = prev_data_dict.get(input_sheet).get(source_sheet).apply(lambda x: method(x, info_dict))
                 data_dict[input_sheet] = input_sheet_current_state
+            print(f"preform_data_transformation level || {transformation} transformations were performed. Type performance log is")
+            print(f"{pd.DataFrame(TC.TF.application_history).loc[pd.DataFrame(TC.TF.application_history)['transformation family']==transformation]}")
             stage_dict['data'] = data_dict
             self.transformation_stages.append(stage_dict)
 
@@ -131,13 +134,16 @@ class InputHandler():
         for input_sheet in prev_data_dict.keys():
             input_sheet_current_state = pd.DataFrame()
             for source_sheet in prev_data_dict.get(input_sheet).keys():
+                print(f"preform_data_transformation level || merging {input_sheet} input sheet. Source sheets containing data were {prev_data_dict.get(input_sheet).keys()}")
                 if len(input_sheet_current_state) == 0:
                     input_sheet_current_state = prev_data_dict.get(input_sheet).get(source_sheet)
                 else:
                     input_sheet_current_state = input_sheet_current_state.join(prev_data_dict.get(input_sheet).get(source_sheet))
             data_dict[input_sheet] = input_sheet_current_state
         stage_dict['data'] = data_dict
+        self.transformation_stages.append(stage_dict)
         self.model_data = self.transformation_stages[-1].get('data')
+        print(f"preform_data_transformation level || model data has been constructed, the keys are {self.model_data.keys()}")
         end = time()
         all_time = end-start
 
@@ -151,4 +157,20 @@ class InputHandler():
         assert len(set.intersection(set(self.model_data.keys()),mou.UnitsValueSet)) > 0, f'put_model_data level || None of Model Data keys, {self.model_data.keys} is in {mou.UnitsValueSet}'
         for k in self.model_data.keys():
             assert k in mou.UnitsValueSet, f'put_model_data level || Model data key {k} is not in {mou.UnitsValueSet}'
+
+        model_book_sheets = xlrd.open_workbook(self.model_path, on_demand=True).sheet_names()
+        preserve_model_sheets = list(np.setdiff1d(model_book_sheets,list(self.model_data.keys())))
+        preserve_sheet_dict = {}
+        for sheet in preserve_model_sheets:
+            preserve_sheet_dict[sheet] = pd.read_excel(self.model_path, sheet_name=sheet)
+        model_writer = pd.ExcelWriter(f"{self.model_path}", mode='w')
+        for model_sheet_key in self.model_data.keys():
+            print(f'put_model_data level || writing {model_sheet_key} to file')
+            self.model_data.get(model_sheet_key).to_excel(model_writer, sheet_name = model_sheet_key)
+        for sheet in preserve_model_sheets:
+            preserve_sheet_dict.get(sheet).to_excel(model_writer, sheet_name=sheet)
+        model_writer.save()
+        model_writer.close()
+        return 0
+
 

@@ -104,13 +104,13 @@ def test_transform_method(sample_ts,null_ts,instance,method, norm_date = None):
 # test_transform_method(sample_ts)
 # res = instance_dict.get('freq').get_series_frequency(day_ts)
 # res, null_res = test_transform_method(sample_ts, null_ts, 'freq','index', norm_date=nd)
-ft_key = "weekly_sum"
-res, null_res = test_transform_method(day_ts, null_day_ts, instance='freq', method = ft_key)
-
-test_result = pd.DataFrame({'sample':day_ts,'sample_res':res,'null':null_day_ts,'null_res':null_res})
+# ft_key = "weekly_sum"
+# res, null_res = test_transform_method(day_ts, null_day_ts, instance='freq', method = ft_key)
+#
+# test_result = pd.DataFrame({'sample':day_ts,'sample_res':res,'null':null_day_ts,'null_res':null_res})
 
 IH = InputHandler('kzt')
 IH.get_model_inputs()
 IH.get_model_data()
-IH.perform_data_tranformation()
+IH.perform_data_transformation()
 IH.put_model_data()

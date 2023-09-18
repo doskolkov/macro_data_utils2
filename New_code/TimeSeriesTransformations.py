@@ -153,6 +153,7 @@ class frequency_transformations():
         null_index = ts[pd.isnull(ts)].index
         orig_name = ts.name
         ts = ts.resample('w').agg('last')
+        ts.index = list(pd.Series(ts.index).apply(lambda x: x.replace(day=1)))
         if freq == 'w':
             ts[null_index] = None
         ts.name = orig_name
@@ -172,8 +173,10 @@ class frequency_transformations():
         null_index = ts[pd.isnull(ts)].index
         orig_name = ts.name
         ts = ts.resample('m').agg('last')
+        ts.index = list(pd.Series(ts.index).apply(lambda x: x.replace(day=1)))
         if freq == 'm':
             ts[null_index] = None
+
         ts.name = orig_name
         return ts
 
@@ -192,6 +195,7 @@ class frequency_transformations():
         null_index = ts[pd.isnull(ts)].index
         orig_name = ts.name
         ts = ts.resample('Q').agg('last')
+        ts.index = list(pd.Series(ts.index).apply(lambda x: x.replace(day=1)))
         if freq=='q':
             ts[null_index] = None
         ts.name = orig_name
@@ -201,6 +205,7 @@ class frequency_transformations():
         null_index = ts[pd.isnull(ts)].index
         orig_name = ts.name
         ts = ts.resample('Y').agg('last')
+        ts.index = list(pd.Series(ts.index).apply(lambda x: x.replace(day=1)))
         if freq == 'y':
             ts[null_index] = None
         ts.name = orig_name
@@ -220,6 +225,7 @@ class frequency_transformations():
         null_index = ts[pd.isnull(ts)].index
         orig_name = ts.name
         ts = ts.resample('w').agg('mean')
+        ts.index = list(pd.Series(ts.index).apply(lambda x: x.replace(day=1)))
         if freq == 'w':
             ts[null_index] = None
         ts.name = orig_name
@@ -239,6 +245,7 @@ class frequency_transformations():
         null_index = ts[pd.isnull(ts)].index
         orig_name = ts.name
         ts = ts.resample('m').agg('mean')
+        ts.index = list(pd.Series(ts.index).apply(lambda x: x.replace(day=1)))
         if freq == 'm':
             ts[null_index] = None
         ts.name = orig_name
@@ -258,6 +265,7 @@ class frequency_transformations():
         null_index = ts[pd.isnull(ts)].index
         orig_name = ts.name
         ts = ts.resample('Q').agg('mean')
+        ts.index = list(pd.Series(ts.index).apply(lambda x: x.replace(day=1)))
         if freq =='q':
             ts[null_index]=None
         ts.name = orig_name
@@ -268,6 +276,7 @@ class frequency_transformations():
         null_index = ts[pd.isnull(ts)].index
         orig_name = ts.name
         ts = ts.resample('Y').agg('mean')
+        ts.index = list(pd.Series(ts.index).apply(lambda x: x.replace(day=1)))
         if freq == 'y':
             ts[null_index] = None
         ts.name = orig_name
@@ -287,6 +296,7 @@ class frequency_transformations():
         null_index = ts[pd.isnull(ts)].index
         orig_name = ts.name
         ts = ts.resample('w').agg('sum')
+        ts.index = list(pd.Series(ts.index).apply(lambda x: x.replace(day=1)))
         if freq == 'w':
             ts[null_index] = None
         ts.name = orig_name
@@ -298,6 +308,7 @@ class frequency_transformations():
         null_index = ts[pd.isnull(ts)].index
         orig_name = ts.name
         ts = ts.resample('m').agg('sum')
+        ts.index = list(pd.Series(ts.index).apply(lambda x: x.replace(day=1)))
         if freq == 'm':
             ts[null_index] = None
         ts.name = orig_name
@@ -318,6 +329,7 @@ class frequency_transformations():
         null_index = ts[pd.isnull(ts)].index
         orig_name = ts.name
         ts = ts.resample('Q').agg('sum')
+        ts.index = list(pd.Series(ts.index).apply(lambda x: x.replace(day=1)))
         if freq =='q':
             ts[null_index]=None
         ts.name = orig_name
@@ -328,6 +340,7 @@ class frequency_transformations():
         null_index = ts[pd.isnull(ts)].index
         orig_name = ts.name
         ts = ts.resample('Y').agg('sum')
+        ts.index = list(pd.Series(ts.index).apply(lambda x: x.replace(day=1)))
         if freq == 'y':
             ts[null_index] = None
         ts.name = orig_name
