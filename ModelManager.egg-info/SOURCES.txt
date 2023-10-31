@@ -1,0 +1,11 @@
+setup.py
+ModelManager/ExcelManage.py
+ModelManager/ModelManager.py
+ModelManager/Utils.py
+ModelManager/__init__.py
+ModelManager/information.py
+ModelManager.egg-info/PKG-INFO
+ModelManager.egg-info/SOURCES.txt
+ModelManager.egg-info/dependency_links.txt
+ModelManager.egg-info/requires.txt
+ModelManager.egg-info/top_level.txt
