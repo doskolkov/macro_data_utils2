@@ -1,5 +1,4 @@
-from Utils.information import INFO as info
-from Utils.information import ModelInputInfoFields as mif
+from New_code.information import ModelInputInfoFields as mif
 from New_code.TimeSeriesTransformations import type_transformations,frequency_transformations,normalization_transformations,seasonal_adjustment_transformations
 from New_code.TimeSeriesTransformations import FrequencyException
 
