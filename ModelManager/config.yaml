@@ -57,4 +57,5 @@ DataBaseExcel:
   position: "position"
   ticker: "ticker"
   category: "category"
+  date_column: "date"
 

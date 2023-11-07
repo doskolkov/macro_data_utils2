@@ -79,6 +79,9 @@ class ModelManager(DataExcel):
 
         self.database_sources = {}
         self.variables = []
+        self.properly_defined_variables = []
+        self.undefined_variables_with_ts = []
+        self.undefined_variables = []
 
     # def _package_path(self):
     #     return files("ModelManager")
@@ -99,7 +102,6 @@ class ModelManager(DataExcel):
                             input_sheet] = self.SourceTypeManagerMap.get(source_type)(source, input_file, input_sheet)
                         input_sheet_part = input_file_part.loc[input_file_part[self.config['input_sheet']]==input_sheet]
                         for variable_fname in input_sheet_part[self.config['fname']].unique():
-                            # variable_info = {self.config['fname']:variable_fname}
                             fname_part = input_sheet_part.loc[input_sheet_part[self.config['fname']]==variable_fname]
                             for is_real in fname_part[self.config['is_real']].unique():
                                 is_real_part = fname_part.loc[fname_part[self.config['is_real']]==is_real]
@@ -130,7 +132,14 @@ class ModelManager(DataExcel):
                                     ))
 
     def initialize_variables(self):
-
+        for variable in self.variables:
+            variable.define()
+            if variable.raw_data_obtained and variable.raw_data_properties_defined:
+                self.properly_defined_variables.append(variable)
+            elif variable.raw_data_obtained:
+                self.undefined_variables_with_ts.append(variable)
+            else:
+                self.undefined_variables.append(variable)
 
 
     # def get_model_inputs(self, return_method_output=True):
