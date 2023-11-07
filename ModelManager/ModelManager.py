@@ -85,7 +85,7 @@ class ModelManager(DataExcel):
 
     # def _package_path(self):
     #     return files("ModelManager")
-    def initialize_raw_data_loaders(self):
+    def initialize_model_schema(self):
         inputs_sheet = self.load_excel(self.model_path, 'input')
         var_list_columns = self.InputInfoCols
         for source_type in inputs_sheet[self.config['sourcetype']].unique():
@@ -131,9 +131,9 @@ class ModelManager(DataExcel):
                                         destinations=destinations
                                     ))
 
-    def initialize_variables(self):
+    def define_variables(self, date_from = None, date_till = None):
         for variable in self.variables:
-            variable.define()
+            variable.define(date_from=date_from,date_till=date_till)
             if variable.raw_data_obtained and variable.raw_data_properties_defined:
                 self.properly_defined_variables.append(variable)
             elif variable.raw_data_obtained:
@@ -141,66 +141,10 @@ class ModelManager(DataExcel):
             else:
                 self.undefined_variables.append(variable)
 
-
-    # def get_model_inputs(self, return_method_output=True):
-    #     """
-    #
-    #     Args:
-    #         return_method_output:
-    #
-    #     Returns:
-    #
-    #     """
-    #
-    #     inputs_sheet = self.load_excel(self.model_path, 'input')
-    #     var_list_columns = self.InputInfoCols
-    #
-    #     db_sources = inputs_sheet[self.InputSourcesCols].unique()
-    #
-    #     for source in db_sources.iterrows():
-    #
-    #
-    #         if source['source_type'] == 'SQL':
-    #             #data_source = DBManagerSQL()
-    #             pass
-    #         else:
-    #             data_source = DBManagerExcel(source[self.config['source']],
-    #                                          source[self.config['input_file']],
-    #                                          source[self.config['input_sheet']],
-    #                                          )
-    #         data_source.add_indicators()
-    #         self.database_sources.append(data_source)
-    #
-    #
-    #
-    #
-    #     inputs_sheet = inputs_sheet.merge(var_list[var_list_columns], how='left', left_on=mif.InputInfoCols,
-    #                                       right_on=mif.InputInfoCols)
-    #
-    #     output_keys = list(inputs_sheet[mif.config['output_sheet']].unique())
-    #
-    #     self.db_data_sheets = list(inputs_sheet[mif.config['input_sheet']].unique())
-    #     self.InputVarsTranformDict = inputs_sheet[mif.InputInstructionCols].set_index(mif.config['fname']).to_dict()
-    #     for k in output_keys:
-    #         self.model_input_sheets_info[k] = inputs_sheet.loc[
-    #             inputs_sheet[mif.config['output_sheet']] == k].reset_index().drop(
-    #             columns='index')
-    #     print(f'Successfully obtained model inputs || Model input keys are {self.model_input_sheets_info.keys()}')
-    #
-    #     if return_method_output:
-    #         return self.model_input_sheets_info
-    #     else:
-    #         return 0
-
+    def transform_variables(self):
+        pass
+    def put_variables(self):
+        pass
     def assert_model_integrity(self):
-        True
-
-    def load_model_inputs(self):
-        True
-
-    def transform_model_inputs(self):
-        True
-
-    def put_model_inputs(self):
-        True
+        pass
 

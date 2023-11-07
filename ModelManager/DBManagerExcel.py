@@ -124,16 +124,3 @@ class DBManagerExcel(DataExcel):
         return return_dict
 
 
-
-    def add_indicators(self):
-        True
-
-    def get_inputs(self, return_method_output=True):
-        """
-
-        Args:
-            return_method_output:
-
-        Returns:
-
-        """
