@@ -34,8 +34,13 @@ class DBManagerExcel(DataExcel):
         if info_settings is None:
             self.logex.error("Error loading setting file: ", str(self.config_files))
 
-        self.config = info_settings['DataBaseExcel']
-        self.miif = info_settings['ModelInputInfoFields']
+        self.storage_fields = info_settings['StorageInfoFields']
+        self.rdls = self.storage_fields['RawDataLocation']
+        self.rdp = self.storage_fields['RawDataProperties']
+
+        self.model_fields = info_settings['ModelInfoFields']
+        self.rdlm = self.model_fields['RawDataLocationFields']
+
         self.data_sheet = None
         self.var_guide = None
         self.located_variables = []
@@ -45,44 +50,45 @@ class DBManagerExcel(DataExcel):
         if self.var_guide:
             pass
         else:
-            self.var_guide = self.load_excel(self.input_file, self.config['var_list_sheet'], skip_row=None)
+            self.var_guide = self.load_excel(self.input_file, self.storage_fields['var_list_sheet'], skip_row=None)
 
     def import_data_sheet(self):
         if self.data_sheet:
             pass
         else:
-            self.data_sheet = self.load_excel(self.input_file, self.input_sheet).set_index(self.config['date_column'])
-
+            self.data_sheet = self.load_excel(self.input_file, self.input_sheet).set_index(
+                self.storage_fields['date_column'])
 
     def get_variable_storage_info(self, variable_info):
         if self.var_guide is None:
             self.import_var_guide()
 
         guide_locations = self.var_guide.merge(pd.DataFrame(variable_info, index=[0]), how='left',
-                                               left_on=[self.miif['fname'], self.miif['is_real'], self.miif['is_sa']],
-                                               right_on=[self.config['name'], self.config['real'], self.config[
-                                                   'sa']]).dropna().drop_duplicates().reset_index().drop(
+                                               left_on=[self.rdls['name'], self.rdls['real'], self.rdls['sa']],
+                                               right_on=[self.rdlm['fname'], self.rdlm['is_real'], self.rdlm[
+                                                   'is_sa']]).dropna().drop_duplicates().reset_index().drop(
             columns='index')
-        if len(guide_locations)==0:
+        if len(guide_locations) == 0:
             self.logex.error(f'Was unable to locate varibale || {variable_info} ||')
             self.not_located_variables.append(variable_info)
             return None
-        if len(guide_locations)>1:
+        if len(guide_locations) > 1:
             self.logex.error(f'Variable information is not one-to-one || {variable_info} ||')
             self.not_located_variables.append(variable_info)
             return None
         else:
             with guide_locations.to_dict() as guide:
                 return_dict = {}
-                for key in [self.config['variable'],self.config['short_name'],self.config['freq'],self.config['type'],self.config['calc']]:
+                for key in [self.storage_fields['variable'], self.storage_fields['short_name'], self.rdp['freq'],
+                            self.rdp['type'], self.rdp['calc']]:
                     try:
                         return_dict[key] = guide.get(key).get(0)
                     except KeyError as e:
-                        self.logex.error(f'Var list columns names were not as expected, KeyError was raised with message: {e.args[0]}')
+                        self.logex.error(
+                            f'Var list columns names were not as expected, KeyError was raised with message: {e.args[0]}')
                         return_dict[key] = None
                 self.located_variables.append(variable_info)
                 return return_dict
-
 
     def get_variable_ts_with_attributes(self, variable_info, date_from=None, date_till=None):
         if self.data_sheet is None:
@@ -92,16 +98,17 @@ class DBManagerExcel(DataExcel):
         return_dict = {}
         if storage_info:
             try:
-                return_dict['raw_ts'] = self.data_sheet[storage_info.get(self.config['variable'])]
+                return_dict['raw_ts'] = self.data_sheet[storage_info.get(self.storage_fields['variable'])]
                 return_dict['ts_found'] = True
             except KeyError:
-                self.logex(f"""Was unable to locate variable {storage_info.get(self.config['variable'])} on input sheet {self.input_sheet}""")
+                self.logex(
+                    f"""Was unable to locate variable {storage_info.get(self.storage_fields['variable'])} on input sheet {self.input_sheet}""")
                 return_dict['raw_ts'] = None
                 return_dict['ts_found'] = False
-            return_dict[self.config['short_name']] = storage_info[self.config['short_name']]
+            return_dict[self.storage_fields['short_name']] = storage_info[self.storage_fields['short_name']]
             ts_properties = {}
             return_dict['ts_properties_defined'] = True
-            for key in [self.config['freq'],self.config['type'],self.config['calc']]:
+            for key in [self.rdp['freq'], self.rdp['type'], self.rdp['calc']]:
                 if storage_info.get(key):
                     return_dict['ts_properties_defined'] *= True
                 else:
@@ -111,15 +118,15 @@ class DBManagerExcel(DataExcel):
             return_dict['ts_properties_defined'] = bool(return_dict['ts_properties_defined'])
         else:
             return_dict = {
-                'raw_ts':None,
-                'short_name':None,
-                'ts_properties':{
-                    self.config['freq']: None,
-                    self.config['type']: None,
-                    self.config['calc']: None,
+                'raw_ts': None,
+                'short_name': None,
+                'ts_properties': {
+                    self.rdp['freq']: None,
+                    self.rdp['type']: None,
+                    self.rdp['calc']: None,
                 },
-                'ts_found':False,
-                'ts_properties_defined':False
+                'ts_found': False,
+                'ts_properties_defined': False
             }
         return return_dict
 

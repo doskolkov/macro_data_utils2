@@ -9,24 +9,29 @@ INFO:
     rus: "Russia"
     bel: "Belarus"
 
-ModelInputInfoFields:
-  country: "country"
-  source: "source"
-  sourcetype: "source_type"
-  input_file: "input_file"
-  input_sheet: "input_sheet"
-  fname: "name"
-  is_real: "real"
-  is_sa: "sa"
-  transf: "transf"
-  stype: "type"
-  calc: "calc"
-  is_makesa: "makesa"
-  freq: "freq"
-  ds: "start"
-  de: "end"
-  norm_d: "norm"
-  output_sheet: "output_sheet"
+ModelInfoFields:
+  DataSourceInfoFields:
+    country: "country"
+    sourcetype: "source_type"
+    source: "source"
+    input_file: "input_file"
+    input_sheet: "input_sheet"
+
+  RawDataLocationInfoFields:
+    fname: "name"
+    is_real: "real"
+    is_sa: "sa"
+
+  TransformationInstructionFields:
+    transf: "transf"
+#    stype: "type"
+    calc: "calc"
+    is_makesa: "makesa"
+    freq: "freq"
+    ds: "start"
+    de: "end"
+    norm_d: "norm"
+    output_sheet: "output_sheet"
 
 ModelOutputUnits:
   m: "monthly"
@@ -39,23 +44,26 @@ ModelOutputUnits:
   UnitsValueSet: [m, msa, q, qsa, d, a, w]
 
 
-DataBaseExcel:
+StorageInfoFields:
   var_list_sheet: "var_list"
+  date_column: "date"
   sheet: "sheet"
   variable: "variable"
-  name: "name"
   short_name: "short_name"
-  freq: "freq"
-  type: "type"
-  real: "real"
-  sa: "sa"
+  RawDataLocation:
+    name: "name"
+    real: "real"
+    sa: "sa"
+  RawDataProperties:
+    freq: "freq"
+    type: "type"
+    calc: "calc"
   description: "description"
   source: "source"
   country: "country"
   last_date: "last_date"
-  calc: "calc"
   position: "position"
   ticker: "ticker"
   category: "category"
-  date_column: "date"
+
 

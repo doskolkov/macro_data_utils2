@@ -3,23 +3,16 @@ import pandas as pd
 from .Utils import setup_logger, get_config
 from .ExcelUtils import DataExcel
 from .DBManagerExcel import DBManagerExcel
-
-
-
-class VariableManager():
-
-    def __init__(self):
-        """
-        Load model settings
-
-        Args:
-            model_path:
-        """
-        return True
+from .Transformations import TrasformationsConfig
 
 class Variable():
-
+    config_files = ["config.yaml"]
     def __init__(self, variable_info, datasource_info, dataloader_instance, destinations):
+        info_settings = get_config(self.config_files)
+        self.logex = setup_logger('Model', 'data.log')
+        if info_settings is None:
+            self.logex.error("Error loading setting file: ", str(self.config_files))
+
 
         self.variable_info = variable_info
         self.datasource_info = datasource_info

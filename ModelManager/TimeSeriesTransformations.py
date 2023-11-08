@@ -146,7 +146,6 @@ class frequency_transformations():
             'annual_sum':self.annual_sum
         }
         return config
-
     def weekly_eop(self,ts):
         freq = self.get_series_frequency(ts)
         if freq not in ['w','d']:
@@ -180,6 +179,7 @@ class frequency_transformations():
 
         ts.name = orig_name
         return ts
+
     def quarterly_eop(self, ts):
         '''
         Gives last available value of the quarter
@@ -210,7 +210,6 @@ class frequency_transformations():
             ts[null_index] = None
         ts.name = orig_name
         return ts
-
     def weekly_avr(self, ts):
         '''
 
@@ -271,6 +270,7 @@ class frequency_transformations():
             ts[null_index]=None
         ts.name = orig_name
         return ts
+
     def annual_avr(self, ts):
         freq = self.get_series_frequency(ts)
         null_index = ts[pd.isnull(ts)].index
@@ -281,7 +281,6 @@ class frequency_transformations():
             ts[null_index] = None
         ts.name = orig_name
         return ts
-
     def weekly_sum(self, ts):
         '''
 
@@ -314,6 +313,7 @@ class frequency_transformations():
             ts[null_index] = None
         ts.name = orig_name
         return ts
+
     def quarterly_sum(self, ts):
         '''
 
@@ -334,6 +334,7 @@ class frequency_transformations():
             ts[null_index]=None
         ts.name = orig_name
         return ts
+
     def annual_sum(self, ts):
         freq = self.get_series_frequency(ts)
         null_index = ts[pd.isnull(ts)].index
@@ -344,10 +345,10 @@ class frequency_transformations():
             ts[null_index] = None
         ts.name = orig_name
         return ts
-
     def unity_transformation(self, ts):
 
         return ts
+
     def get_series_frequency(self, ts):
         ts_df = pd.DataFrame({'value': ts}).reset_index()
         datecol = ts_df.columns[0]

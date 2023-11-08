@@ -42,27 +42,12 @@ class ModelManager(DataExcel):
         if info_settings is None:
             self.logex.error("Error loading setting file: ", str(self.config_files))
 
-        self.config = info_settings['ModelInputInfoFields']
+        self.model_fields = info_settings['ModelInfoFields']
+        self.dsi = self.model_fields['DataSourceInfoFields']
+        self.rdli = self.model_fields['RawDataLocationInfoFields']
+        self.ti = self.model_fields['TransformationInstructionFields']
 
-        self.InputSourcesCols = [self.config['source'],
-                                 self.config['sourcetype'],
-                                 self.config['input_file'],
-                                 self.config['input_sheet'],
-                                 ]
-        self.InputInfoCols = [self.config['fname'],
-                              self.config['is_real'],
-                              self.config['is_sa']
-                              ]
-        self.InputInstructionCols = [
-                                     self.config['output_sheet'],
-                                     self.config['transf'],
-                                     self.config['calc'],
-                                     self.config['is_makesa'],
-                                     self.config['freq'],
-                                     self.config['ds'],
-                                     self.config['de'],
-                                     self.config['norm_d']
-                                     ]
+        self.config = info_settings['ModelInputInfoFields']
 
         self.config_output = info_settings['ModelOutputUnits']
         self.UnitsValueSet = set([self.config_output['m'],
@@ -88,40 +73,40 @@ class ModelManager(DataExcel):
     def initialize_model_schema(self):
         inputs_sheet = self.load_excel(self.model_path, 'input')
         var_list_columns = self.InputInfoCols
-        for source_type in inputs_sheet[self.config['sourcetype']].unique():
+        for source_type in inputs_sheet[self.dsi['sourcetype']].unique():
             self.database_sources[source_type] = {}
-            source_type_part = inputs_sheet.loc[inputs_sheet[self.config['sourcetype']] == source_type]
-            for source in source_type_part[self.config['source']].unique():
+            source_type_part = inputs_sheet.loc[inputs_sheet[self.dsi['sourcetype']] == source_type]
+            for source in source_type_part[self.dsi['source']].unique():
                 self.database_sources[source_type][source] = {}
-                source_part = source_type_part.loc[source_type_part[self.config['source']] == source]
-                for input_file in source_part[self.config['input_file']].unique():
+                source_part = source_type_part.loc[source_type_part[self.dsi['source']] == source]
+                for input_file in source_part[self.dsi['input_file']].unique():
                     self.database_sources[source_type][source][input_file] = {}
-                    input_file_part = source_part.loc[source_part[self.config['input_file']] == input_file]
-                    for input_sheet in input_file_part[self.config['input_sheet']].unique():
+                    input_file_part = source_part.loc[source_part[self.dsi['input_file']] == input_file]
+                    for input_sheet in input_file_part[self.dsi['input_sheet']].unique():
                         self.database_sources[source_type][source][input_file][
                             input_sheet] = self.SourceTypeManagerMap.get(source_type)(source, input_file, input_sheet)
-                        input_sheet_part = input_file_part.loc[input_file_part[self.config['input_sheet']]==input_sheet]
-                        for variable_fname in input_sheet_part[self.config['fname']].unique():
-                            fname_part = input_sheet_part.loc[input_sheet_part[self.config['fname']]==variable_fname]
-                            for is_real in fname_part[self.config['is_real']].unique():
-                                is_real_part = fname_part.loc[fname_part[self.config['is_real']]==is_real]
-                                for is_sa in is_real_part[self.config['is_sa']].unique():
-                                    is_sa_part = is_real_part.loc[is_real_part[self.config['is_sa']]==is_sa]
+                        input_sheet_part = input_file_part.loc[input_file_part[self.dsi['input_sheet']]==input_sheet]
+                        for variable_fname in input_sheet_part[self.rdli['fname']].unique():
+                            fname_part = input_sheet_part.loc[input_sheet_part[self.rdli['fname']]==variable_fname]
+                            for is_real in fname_part[self.rdli['is_real']].unique():
+                                is_real_part = fname_part.loc[fname_part[self.rdli['is_real']]==is_real]
+                                for is_sa in is_real_part[self.rdli['is_sa']].unique():
+                                    is_sa_part = is_real_part.loc[is_real_part[self.rdli['is_sa']]==is_sa]
                                     variable_info = {
-                                        self.config['fname']:variable_fname,
-                                        self.config['is_real']:is_real,
-                                        self.config['is_sa']:is_sa
+                                        self.rdli['fname']:variable_fname,
+                                        self.rdli['is_real']:is_real,
+                                        self.rdli['is_sa']:is_sa
                                     }
                                     datasource_info = {
-                                        self.config['source_type']: source_type,
-                                        self.config['source']: source,
-                                        self.config['input_file']: input_file,
-                                        self.config['input_sheet']: input_sheet
+                                        self.dsi['source_type']: source_type,
+                                        self.dsi['source']: source,
+                                        self.dsi['input_file']: input_file,
+                                        self.dsi['input_sheet']: input_sheet
                                     }
                                     destinations = []
                                     for destination_row in is_sa_part.iterrows():
                                         destination = {}
-                                        for col in self.InputInstructionCols:
+                                        for col in self.ti.keys():
                                             destination[col] = destination_row[col]
                                         destinations.append(destination)
                                     self.variables.append(Variable(
