@@ -1,0 +1,139 @@
+# DataManage project
+
+Description:
+Load data from different datasources (excel, sql, etc), transform it according to rules and save to model files
+
+## DataManage structure:
+
+### 1. Class `ModelManager` 
+Main class to work with `models`: excel files with settings and list of variables to load and to transform. 
+
+Has following methods:
+
+1.  **constructor**
+inputs: file path to the model
+outputs: None
+function: 
+	- initialize logger
+	- load YAML file with model settings, including main data fields and implemented string constants
+  - initialize basic class attributes. These are:
+    SourceTypeManagerMap - a mapping between codified source types mentioned in model "input" file and classes that treat abovementioned source types
+    database_sources - a multi-key mapping that between full definition of data source and corresponding data-loading instance
+    variables - a list of Variable instances. Each instance corresponds to unique set of InputInfoCols values.
+    properly_defined_variables - a sublist of variables list that stores variables such that 1) Their raw ts is located and imported (stored within variable container) and 2) their properties are fully defined, 
+which means that a data-loading instance was able to find nonempty information on its type, frequency, and 'calc' info field
+    undefined_variables_with_ts - a sublist of variables list that stores variables such that their raw ts is located and imported (stored within variable container)
+    undefined_variables - a sublist of variables list that stores variables such that there is no ts for them, so nothing can be done to those
+TODO:
+  - TODO: Other informative attributes highlighting model processes
+
+2. **check_model_integrity - TODO**
+TODO: check the integrity of the model, column names in `input` sheet corresponds to `ModelInputInfoFields` 
+
+3. **initialize_model_schema**
+inputs: None
+outputs: None 
+function:
+  - fill database_sources map with instances of corresponding data-loading classes
+  - initialize variables - instances of Variable class - with full range of information needed
+
+4. **define_variables**
+inputs: date_from, date_till
+outputs: None
+function:
+	- call Variable.define method which:
+    1. Calls corresponding data-loader instance to obtain raw variable time-series and its properties
+    2. Sorts all variables into variable lists based on presence of their raw data and properties information
+TODO: -add proper `logging` and exception handling
+
+
+5. **transofrm_variables**
+TODO: call Variable.transform method to transform raw ts according to @destinations@ argument and store transformed data
+
+6. **put_variables**
+TODO: call Variable.put_value method to put transformed data to destination sheet
+
+
+### 2. Class `DBManagerExcel`
+Main class to perform operations with excel storage files
+
+Has following methods:
+
+1.  **constructor**
+inputs: source, input_file (a path), input_sheet (an exact sheet with data)
+outputs: None
+function: 
+	- initialize logger
+	- load YAML file with model settings
+  - initialize basic class attributes. These are:
+    data_sheet - a table storing data. Only imported once
+    var_guide - a table storing information about timeseries stored in corresponding input_file
+    located_variables - a list of variables that were successfully located on input_sheet
+    not_located_variables - a list of variables that were not located
+TODO:
+  - Other informative attributes highlighting model processes
+
+2. **import_var_guide**
+inputs: None
+outputs: None
+imports var_list sheet from corresponding input file and stores it in corresponding attribute
+
+3. **import_data_sheet**
+inputs: None
+outputs: None
+imports data sheet from corresponding input file and stores it in corresponding attribute
+
+4. **get_variable_storage_info**
+This method locates a variable in input_sheet and returns the location and properties
+inputs: 
+variable_info - a dictionary of model input-defining values
+outputs: 
+return_dict - a dictionary containing information on 1) corresponding column name on input_sheet, 2) variable short name (мало ли где пригодится) and 
+3) variable properties - frequency, type and 'calc' of raw data ts
+
+5. **get_variable_ts_with_attributes**
+This method obtaines a raw ts and transmits its properties, as it calls Variable.get_variable_storage_info method. It also reports variable data and properties status.
+inputs: 
+variable_info - see 4.
+date_from, date_till - date range to get raw ts
+outputs: 
+return_dict - a dictionary containing: 1) raw ts itself; 2)variable short name; 3)raw ts properties; 4)ts_found flag; 5)ts_properties_defined flag
+
+TODO: implement date_from, date_till
+
+### 3. Class `Variable`
+A class that performs operations with model variables and stores those data and corresponding attributes. Each instance of this class corresponds
+uniquely to one data column in database source.
+
+Has following methods:
+1.  **constructor**
+inputs:
+- variable_info - a dictionary with variable information mentioned in model 'input' sheet
+- datasource_info - a dictionary with datasource information mentioned in model 'input' sheet
+- dataloader_instance - an instance of data-loading class. This instance was defined in ModelManage.initialize_model_schema method and has exact information 
+on where data is stored
+- destinations - list of dictionaries. Stores information on destinations of raw data stored in variable, as it might be subject to multiple sets of transformations
+outputs: None
+Container:
+- variable_info - see inputs
+- datasource_info - see inputs
+- dataloader_instance - see inputs
+- destinations - see inputs
+- raw_data_obtained - a flag indicating if raw data import was successful 
+- raw_data_properties_defined - a flag indicating if properties of raw data were defined
+- raw_ts - a timeseries of raw data
+- raw_ts_properties - properties of raw data obtained from datasource guide. Those are frequency, type, 'calc'
+- destinations_ts - TODO - a dictionary with transformed time series of variable data. Each key may correspond to each destination
+
+2.  **define**
+This method defines variable, meaning it 1)obtaines raw data, 2)obtaines its properties, calling self.dataloader_instance.get_variable_ts_with_attributes method.
+It also alteres status flags in constructor
+inputs:
+- date_from - TODO - implement this input
+- date_till - TODO - implement this input
+outputs: None
+3.  **transform**
+TODO: This method applies transformations
+
+4.  **put_value**
+TODO: This method returns transformed values
