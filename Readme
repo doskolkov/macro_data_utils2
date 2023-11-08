@@ -137,3 +137,9 @@ TODO: This method applies transformations
 
 4.  **put_value**
 TODO: This method returns transformed values
+
+### 4. Class `TransformationsConfig`
+TODO: do proper connections between properties and transformation instructions. Implement proper usage of TimeSeriesTransformations methods
+
+### 5. Class 'TimeSeriesTransformations'
+TODO: rewrite configs such that properly coded instructions can be implemented
