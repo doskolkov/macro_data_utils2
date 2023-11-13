@@ -66,4 +66,32 @@ StorageInfoFields:
   ticker: "ticker"
   category: "category"
 
+TypeValues:
+  index: 'index'
+  rate: 'rate'
+  value: 'value'
+  yoy: 'yoy'
+  ytd: 'ytd'
+  pp: 'pp'
+  values_set: ['index','rate','value','yoy','ytd','pp']
+FreqValues:
+  weekly: 'weekly'
+  monthly: 'monthly'
+  quarterly: 'quarterly'
+  annual: 'annual'
+  values_set: ['weekly','monthly','quarterly','annual']
+CalcValues:
+  eop: 'eop'
+  avr: 'avr'
+  sum: 'sum'
+  values_set: ['eop','avr','sum']
 
+SAValues:
+  sa: 'sa'
+  nonsa: 'nonsa'
+
+TransformationTypes:
+  type: 'type'
+  frequency: 'freq'
+  normalization: 'norm'
+  seasonal_adjustment: 'sa'

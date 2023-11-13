@@ -23,79 +23,86 @@ class TransformationFunctions():
         if info_settings is None:
             self.logex.error("Error loading setting file: ", str(self.config_files))
         self.config = info_settings['ModelInputInfoFields']
+        self.tt = info_settings['TransformationTypes']
+        self.type_transformations = type_transformations().get_config()
+        self.frequency_transformations = frequency_transformations().get_config()
+        self.normalization_transformations = normalization_transformations().get_config()
+        self.seasonal_adjustment_transformations = seasonal_adjustment_transformations().get_config()
 
-    def type_transform(self, ts, instruction = None): ### index, value, rate
-        tname = 'type'
-        instruction_dict = {}
-        if instruction:
-            for k in instruction.keys():
-                instruction_dict[k] = instruction.get(k).get(ts.name)
+        self.transformation_status = {}
+
+    def type_transform(self, ts, property, instruction):
+        key = f"{property[0]}_{instruction[0]}"
+        try:
+            method = self.type_transformations.get(key)
             try:
-                ts = self.type_transformations.get_config().get(instruction_dict.get(mif.transf))(ts)
+                ts = method(ts)
                 status = 0
                 message = None
             except Exception as e:
                 status = 1
                 message = e.args[0]
-        else:
+        except KeyError:
+            message = f"Failed to map property_instruction pair {key} to type_transformation config"
             status = 1
-            message = "Method transformation was not performed, instruction was not passed"
-        self.application_history.append({'transformation family':'type','transformation':instruction_dict.get(mif.transf),'series_name':ts.name,'status':status,'message':message})
-
+        self.transformation_status[self.tt['type']] = {'status':status,'message':message,'config_key':key}
         return ts
 
-    def freq_transform(self, ts, instruction = None):### frequency
-        tname = 'freq'
-        instruction_dict = {}
-        if instruction:
-            for k in instruction.keys():
-                instruction_dict[k] = instruction.get(k).get(ts.name)
+    def freq_transform(self, ts, property, instruction):
+        key = "_".join([f"{component}" for component in instruction])
+        try:
+            method = self.frequency_transformations.get(key)
             try:
-                ts = self.frequency_transformations.get_config().get(f'{instruction_dict.get(mif.freq)}_{instruction_dict.get(mif.calc)}')(ts)
+                ts = method(ts)
                 status = 0
                 message = None
+            except Exception as e:
+                status = 1
+                message = f"{e.args[0]}; stated timeseries frequency is {property}"
             except FrequencyException as fe:
                 status = 1
-                message = fe.args[0]
-            except Exception as e:
-                status = 1
-                message = e.args[0]
-        else:
+                message = f"{fe.args[0]}; stated timeseries frequency is {property}"
+        except KeyError:
+            message = f"Failed to map coded instruction pair {key} to frequency_transformation config"
             status = 1
-            message = "Method transformation was not performed, instruction was not passed"
-        self.application_history.append({'transformation family':'freq','transformation':f'{instruction_dict.get(mif.freq)}_{instruction_dict.get(mif.calc)}','series_name':ts.name,'status':status,'message':message})
-
+        self.transformation_status[self.tt['frequency']] = {'status':status,'message':message,'config_key':key}
         return ts
 
-    def norm_transform(self, ts, instruction = None): ### normalization
-        tname = 'norm'
-        instruction_dict = {}
-        if instruction:
-            for k in instruction.keys():
-                instruction_dict[k] = instruction.get(k).get(ts.name)
+    def norm_transform(self, ts, property, instruction):
+        if 'type' in self.transformation_status.keys():
+            key = property[1]
+        else:
+            key = property[0]
+        try:
+            method = self.normalization_transformations.get(key)
             try:
-                ts = self.normalization_transformations.get_config().get(instruction_dict.get(mif.transf))(ts,
-                                                                                                           instruction_dict.get(
-                                                                                                               mif.norm_d))
+                ts = method(ts, norm_date=instruction[0])
                 status = 0
                 message = None
             except Exception as e:
                 status = 1
                 message = e.args[0]
-        else:
+        except KeyError:
+            message = f"Failed to map data type {key} to normalization_transformation config"
             status = 1
-            message = "Method transformation was not performed, instruction was not passed"
-        self.application_history.append({'transformation family':'norm','transformation':instruction_dict.get(mif.transf),'series_name':ts.name,'status':status,'message':message})
-
+        self.transformation_status[self.tt['normalization']] = {'status':status,'message':message,'config_key':key}
         return ts
 
-    def seasadj_transform(self, ts, instruction = None): ### seasonal adjustment
-        tname = 'seasadj'
-        instruction_dict = {}
-        for k in instruction.keys():
-            instruction_dict[k] = instruction.get(k).get(ts.name)
-        ts *= 1
-
+    def seasadj_transform(self, ts, property, instruction): ### seasonal adjustment
+        key = f"{property[0]}_{instruction[0]}"
+        try:
+            method = self.seasonal_adjustment_transformations.get(key)
+            try:
+                ts = method(ts)
+                status = 0
+                message = None
+            except Exception as e:
+                status = 1
+                message = e.args[0]
+        except KeyError:
+            message = f"Failed to map property-instruction key {key} to sa_transformation config"
+            status = 1
+        self.transformation_status[self.tt['seasonal_adjustment']] = {'status':status,'message':message,'config_key':key}
         return ts
 
 class TrasformationsConfig():
@@ -109,27 +116,28 @@ class TrasformationsConfig():
             self.logex.error("Error loading setting file: ", str(self.config_files))
         self.tic = info_settings['ModelInfoFields']['TransformationInstructionFields'] #transformation instruction cols
         self.pic = info_settings['DataBaseExcel']['RawDataProperties'] #properties information cols
+        self.tt = info_settings['TransformationTypes']
 
         transMethodsDict = {
-            'type': {
+            self.tt['type']: {
                 'method': self.TF.type_transform,
                 'property': [self.pic['type']],
                 'instruction': [self.tic['transf']],
                 'change_name': None
             },
-            'freq': {
+            self.tt['frequency']: {
                 'method': self.TF.freq_transform,
                 'property': [self.pic['freq']],
                 'instruction': [self.tic['freq'],self.tic['calc']],
                 'change_name': None
             },
-            'norm': {
+            self.tt['normalization']: {
                 'method': self.TF.norm_transform,
-                'property':None,
-                'instruction':[self.tic['norm_d'], self.tic['transf']],
+                'property':[self.pic['type'], self.tic['transf']],
+                'instruction':[self.tic['norm_d']],
                 'change_name': None
             },
-            'sa': {
+            self.tt['seasonal_adjustment']: {
                 'method': self.TF.seasadj_transform,
                 'property':[self.pic['sa']],
                 'instruction':[self.tic['is_makesa']],

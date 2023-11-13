@@ -1,5 +1,4 @@
-from Utils.information import INFO as info
-from Utils.information import ModelInputInfoFields as mif
+from .Utils import setup_logger, get_config
 
 import numpy as np
 import pandas as pd
@@ -12,8 +11,14 @@ class type_transformations():
     '''
     Class contains methods to perfrom type transformations. There is also a config to call the methods by their code
     '''
-
+    config_files = ["config.yaml"]
     change_rates_scale = 100
+    def __init__(self):
+        info_settings = get_config(self.config_files)
+        self.logex = setup_logger('Model', 'data.log')
+        if info_settings is None:
+            self.logex.error("Error loading setting file: ", str(self.config_files))
+        self.t = info_settings['TypeValues']
     def get_config(self):
         '''
 
@@ -21,13 +26,27 @@ class type_transformations():
 
         '''
         config = {
-            'index': self.series_to_index,
-            'rate': self.unity_transformation,
-            'value': self.unity_transformation,
-            'index_to_rate': self.index_to_rate,
-            'yoy': self.yoy_change,
-            'ytd': self.ytd_accumulated,
-            'pp': self.pp_change
+            f'{self.t["value"]}_{self.t["index"]}': self.series_to_index,
+            f'{self.t["index"]}_{self.t["index"]}': self.unity_transformation,
+            f'{self.t["rate"]}_{self.t["index"]}': self.rate_to_index,
+
+            f'{self.t["value"]}_{self.t["value"]}': self.unity_transformation,
+
+            f'{self.t["rate"]}_{self.t["rate"]}': self.unity_transformation,
+            f'{self.t["value"]}_{self.t["rate"]}': self.series_to_rate,
+            f'{self.t["index"]}_{self.t["rate"]}': self.index_to_rate,
+
+            f'{self.t["index"]}_yoy': self.yoy_change,
+            f'{self.t["value"]}_yoy': self.yoy_change,
+            f'{self.t["rate"]}_yoy': self.yoy_change,
+
+            f'{self.t["index"]}_ytd': self.ytd_accumulated,
+            f'{self.t["value"]}_ytd': self.ytd_accumulated,
+            f'{self.t["rate"]}_ytd': self.ytd_accumulated,
+
+            f'{self.t["index"]}_pp': self.pp_change,
+            f'{self.t["value"]}_pp': self.pp_change,
+            f'{self.t["rate"]}_pp': self.pp_change
         }
         return config
     def series_to_index(self, ts, norm_value = 100):
@@ -45,6 +64,9 @@ class type_transformations():
         raw_index_ts = trs.fillna(1).cumprod()*norm_value
         index_ts = ts.apply(lambda x: np.nan).fillna(raw_index_ts)
         return index_ts
+    def rate_to_index(self, ts):
+        True
+
     def series_to_rate(self, ts): # не меняем
         '''
         does nothing to a ts
@@ -54,17 +76,6 @@ class type_transformations():
         Returns: pd.timeseries indexed with dates
 
         '''
-        return ts
-    def value_to_value(self, ts): # не меняем
-        '''
-        multiplies input by unity
-        Args:
-            ts: pd.timeseries indexed with dates
-
-        Returns: pd.timeseries indexed with dates
-
-        '''
-        ts *= 1
         return ts
     def index_to_rate(self, ts):
         ts *= 1
@@ -108,7 +119,6 @@ class type_transformations():
         ytd_ts = work_df[[datecol,'ytd']].set_index(datecol)['ytd']
 
         return ytd_ts
-
     def pp_change(self, ts):
         '''
         returns period-to-prev period change rate
@@ -123,29 +133,38 @@ class type_transformations():
         orig_df['pp_change'] = (orig_df['value']/orig_df['value'].shift(1)-1)*self.change_rates_scale
         pp_ts = orig_df[[datecol,'pp_change']].set_index(datecol)['pp_change']
         return pp_ts
-
     def unity_transformation(self, ts):
         return ts
 
-    # ['yoy' - over same period from last year
 
 class frequency_transformations():
+    config_files = ["config.yaml"]
+    def __init__(self):
+        info_settings = get_config(self.config_files)
+        self.logex = setup_logger('Model', 'data.log')
+        if info_settings is None:
+            self.logex.error("Error loading setting file: ", str(self.config_files))
+        self.f = info_settings['FreqValues']
+        self.c = info_settings['CalcValues']
     def get_config(self):
         config = {
-            'weekly_eop':self.weekly_eop,
-            'monthly_eop':self.monthly_eop,
-            'quarterly_eop':self.quarterly_eop,
-            'annual_eop':self.annual_eop,
-            'weekly_avr':self.weekly_avr,
-            'monthly_avr':self.monthly_avr,
-            'quarterly_avr':self.quarterly_avr,
-            'annual_avr':self.annual_avr,
-            'weekly_sum':self.weekly_sum,
-            'monthly_sum':self.monthly_sum,
-            'quarterly_sum':self.quarterly_sum,
-            'annual_sum':self.annual_sum
+            f'{self.f["weekly"]}_{self.c["eop"]}':self.weekly_eop,
+            f'{self.f["monthly"]}_{self.c["eop"]}':self.monthly_eop,
+            f'{self.f["quarterly"]}_{self.c["eop"]}':self.quarterly_eop,
+            f'{self.f["annual"]}_{self.c["eop"]}':self.annual_eop,
+
+            f'{self.f["weekly"]}_{self.c["avr"]}':self.weekly_avr,
+            f'{self.f["monthly"]}_{self.c["avr"]}':self.monthly_avr,
+            f'{self.f["quarterly"]}_{self.c["avr"]}':self.quarterly_avr,
+            f'{self.f["annual"]}_{self.c["avr"]}':self.annual_avr,
+
+            f'{self.f["weekly"]}_{self.c["sum"]}':self.weekly_sum,
+            f'{self.f["monthly"]}_{self.c["sum"]}':self.monthly_sum,
+            f'{self.f["quarterly"]}_{self.c["sum"]}':self.quarterly_sum,
+            f'{self.f["annual"]}_{self.c["sum"]}':self.annual_sum
         }
         return config
+
     def weekly_eop(self,ts):
         freq = self.get_series_frequency(ts)
         if freq not in ['w','d']:
@@ -179,7 +198,6 @@ class frequency_transformations():
 
         ts.name = orig_name
         return ts
-
     def quarterly_eop(self, ts):
         '''
         Gives last available value of the quarter
@@ -210,6 +228,7 @@ class frequency_transformations():
             ts[null_index] = None
         ts.name = orig_name
         return ts
+
     def weekly_avr(self, ts):
         '''
 
@@ -270,7 +289,6 @@ class frequency_transformations():
             ts[null_index]=None
         ts.name = orig_name
         return ts
-
     def annual_avr(self, ts):
         freq = self.get_series_frequency(ts)
         null_index = ts[pd.isnull(ts)].index
@@ -281,6 +299,7 @@ class frequency_transformations():
             ts[null_index] = None
         ts.name = orig_name
         return ts
+
     def weekly_sum(self, ts):
         '''
 
@@ -313,7 +332,6 @@ class frequency_transformations():
             ts[null_index] = None
         ts.name = orig_name
         return ts
-
     def quarterly_sum(self, ts):
         '''
 
@@ -334,7 +352,6 @@ class frequency_transformations():
             ts[null_index]=None
         ts.name = orig_name
         return ts
-
     def annual_sum(self, ts):
         freq = self.get_series_frequency(ts)
         null_index = ts[pd.isnull(ts)].index
@@ -345,10 +362,10 @@ class frequency_transformations():
             ts[null_index] = None
         ts.name = orig_name
         return ts
+
     def unity_transformation(self, ts):
 
         return ts
-
     def get_series_frequency(self, ts):
         ts_df = pd.DataFrame({'value': ts}).reset_index()
         datecol = ts_df.columns[0]
@@ -371,15 +388,22 @@ class frequency_transformations():
             return 'y'
 
 class normalization_transformations():
+    config_files = ["config.yaml"]
 
+    def __init__(self):
+        info_settings = get_config(self.config_files)
+        self.logex = setup_logger('Model', 'data.log')
+        if info_settings is None:
+            self.logex.error("Error loading setting file: ", str(self.config_files))
+        self.t = info_settings['FreqValues']
     def get_config(self):
         config = {
-            'index':self.index_normalization,
-            'rate':self.unity_transformation,
-            'value':self.unity_transformation,
-            'yoy':self.unity_transformation,
-            'ytd':self.unity_transformation,
-            'pp':self.unity_transformation
+            f'{self.t["index"]}':self.index_normalization,
+            f'{self.t["rate"]}':self.unity_transformation,
+            f'{self.t["value"]}':self.unity_transformation,
+            f'{self.t["yoy"]}':self.unity_transformation,
+            f'{self.t["ytd"]}':self.unity_transformation,
+            f'{self.t["pp"]}':self.unity_transformation
         }
         return config
     def index_normalization(self, ts, norm_date, norm_value=100):
@@ -400,15 +424,25 @@ class normalization_transformations():
             norm_ts = ts / ts[norm_date] * norm_value
 
         return norm_ts
-
     def unity_transformation(self, ts, norm_date):
 
         return ts
 class seasonal_adjustment_transformations():
+    config_files = ["config.yaml"]
 
+    def __init__(self):
+        info_settings = get_config(self.config_files)
+        self.logex = setup_logger('Model', 'data.log')
+        if info_settings is None:
+            self.logex.error("Error loading setting file: ", str(self.config_files))
+        self.sa = info_settings['SAValues']
     def get_config(self):
         config = {
-            'sa':self.unity_transformation
+            'sa':self.unity_transformation,
+            f'{self.sa["sa"]}_{self.sa["sa"]}':self.unity_transformation,
+            f'{self.sa["sa"]}_{self.sa["nonsa"]}': self.unity_transformation,
+            f'{self.sa["nonsa"]}_{self.sa["nonsa"]}': self.unity_transformation,
+            f'{self.sa["nonsa"]}_{self.sa["sa"]}': self.unity_transformation,
         }
         return config
     def unity_transformation(self, ts):

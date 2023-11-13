@@ -13,6 +13,10 @@ class Variable():
         if info_settings is None:
             self.logex.error("Error loading setting file: ", str(self.config_files))
 
+        self.transformation_types = info_settings['TransformationTypes']
+
+        self.transforming_instance = TrasformationsConfig()
+        self.transforming_instance_config = self.transforming_instance.transMethodsDict
 
         self.variable_info = variable_info
         self.datasource_info = datasource_info
