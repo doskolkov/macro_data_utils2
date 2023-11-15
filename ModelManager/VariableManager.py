@@ -14,14 +14,15 @@ class Variable():
             self.logex.error("Error loading setting file: ", str(self.config_files))
 
         self.transformation_types = info_settings['TransformationTypes']
-
-        self.transforming_instance = TrasformationsConfig()
-        self.transforming_instance_config = self.transforming_instance.transMethodsDict
+        self.rdp = info_settings['StorageInfoFields']['RawDataProperties']
+        self.tif = info_settings['ModelInfoFields']['TransformationInstructionFields']
 
         self.variable_info = variable_info
         self.datasource_info = datasource_info
         self.destinations = destinations
         self.dataloader_instance = dataloader_instance
+
+        self.transformers = []
 
         self.raw_data_obtained = False
         self.raw_data_properties_defined = False
@@ -36,15 +37,33 @@ class Variable():
         raw_data = self.dataloader_instance.get_variable_ts_with_attributes(variable_info = self.variable_info,
                                                                date_from = date_from,
                                                                date_till = date_till)
-        if raw_data.get('ts_found'):
-            self.raw_ts = raw_data.get('raw_ts')
-            self.raw_data_obtained = True
-        if raw_data.get('ts_properties_defined'):
-            self.raw_ts_properties = raw_data.get('ts_properties')
-            self.raw_data_properties_defined = True
+        # if raw_data.get('ts_found'):
+        self.raw_ts = raw_data.get('raw_ts')
+        self.raw_data_obtained = raw_data.get('ts_found')
+        # if raw_data.get('ts_properties_defined'):
+        self.raw_ts_properties = raw_data.get('ts_properties')
+        self.raw_data_properties_defined = raw_data.get('rs_properties_defined')
+
+        for destination in self.destinations:
+            transformer = TrasformationsConfig(properties=self.raw_ts_properties, destination=destination)
+            transformer_config = transformer.TransformMethodsDict
+            self.transformers.append({'instance':transformer,'config':transformer_config,'key':self.tif['output_sheet']})
 
     def transform(self):
-        True
+        if not self.raw_data_properties_defined or not self.raw_data_obtained:
+            pass
+        else:
+            for transformer in self.transformers:
+                ts = self.raw_ts
+                transformer_config = transformer.get('config')
+                for transformation in self.transformation_types.keys():
+                    transformation_config = transformer_config.get(transformation)
+                    method = transformation_config.get('method')
+                    prop = transformation_config.get('property')
+                    instruciton = transformation_config.get('instruction')
+                    ts = method(ts, prop, instruciton)
+                self.destination_ts[transformer['key']] = ts
+
 
     def put_value(self):
         True

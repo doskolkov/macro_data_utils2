@@ -24,7 +24,6 @@ ModelInfoFields:
 
   TransformationInstructionFields:
     transf: "transf"
-#    stype: "type"
     calc: "calc"
     is_makesa: "makesa"
     freq: "freq"
@@ -58,6 +57,7 @@ StorageInfoFields:
     freq: "freq"
     type: "type"
     calc: "calc"
+    is_sa: "sa"
   description: "description"
   source: "source"
   country: "country"

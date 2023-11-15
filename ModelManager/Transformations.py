@@ -109,38 +109,38 @@ class TrasformationsConfig():
     config_files = ["config.yaml"]
     TF = TransformationFunctions()
 
-    def __init__(self):
+    def __init__(self,properties, destination):
         info_settings = get_config(self.config_files)
         self.logex = setup_logger('Model', 'data.log')
         if info_settings is None:
             self.logex.error("Error loading setting file: ", str(self.config_files))
-        self.tic = info_settings['ModelInfoFields']['TransformationInstructionFields'] #transformation instruction cols
-        self.pic = info_settings['DataBaseExcel']['RawDataProperties'] #properties information cols
+        self.tif = destination #info_settings['ModelInfoFields']['TransformationInstructionFields'] #transformation instruction cols
+        self.rdp = properties#info_settings['DataBaseExcel']['RawDataProperties'] #properties information cols
         self.tt = info_settings['TransformationTypes']
 
-        transMethodsDict = {
+        self.TransformMethodsDict = {
             self.tt['type']: {
                 'method': self.TF.type_transform,
-                'property': [self.pic['type']],
-                'instruction': [self.tic['transf']],
+                'property': [self.rdp['type']],
+                'instruction': [self.tif['transf']],
                 'change_name': None
             },
             self.tt['frequency']: {
                 'method': self.TF.freq_transform,
-                'property': [self.pic['freq']],
-                'instruction': [self.tic['freq'],self.tic['calc']],
+                'property': [self.rdp['freq']],
+                'instruction': [self.tif['freq'],self.tif['calc']],
                 'change_name': None
             },
             self.tt['normalization']: {
                 'method': self.TF.norm_transform,
-                'property':[self.pic['type'], self.tic['transf']],
-                'instruction':[self.tic['norm_d']],
+                'property':[self.rdp['type'], self.tif['transf']],
+                'instruction':[self.tif['norm_d']],
                 'change_name': None
             },
             self.tt['seasonal_adjustment']: {
                 'method': self.TF.seasadj_transform,
-                'property':[self.pic['sa']],
-                'instruction':[self.tic['is_makesa']],
+                'property':[self.rdp['sa']],
+                'instruction':[self.tif['is_makesa']],
                 'change_name': None}
         }
 

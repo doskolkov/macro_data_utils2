@@ -45,7 +45,7 @@ class ModelManager(DataExcel):
         self.model_fields = info_settings['ModelInfoFields']
         self.dsi = self.model_fields['DataSourceInfoFields']
         self.rdli = self.model_fields['RawDataLocationInfoFields']
-        self.ti = self.model_fields['TransformationInstructionFields']
+        self.tif = self.model_fields['TransformationInstructionFields']
 
         self.config = info_settings['ModelInputInfoFields']
 
@@ -106,7 +106,7 @@ class ModelManager(DataExcel):
                                     destinations = []
                                     for destination_row in is_sa_part.iterrows():
                                         destination = {}
-                                        for col in self.ti.keys():
+                                        for col in self.tif.keys():
                                             destination[col] = destination_row[col]
                                         destinations.append(destination)
                                     self.variables.append(Variable(

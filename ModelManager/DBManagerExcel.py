@@ -80,7 +80,7 @@ class DBManagerExcel(DataExcel):
             with guide_locations.to_dict() as guide:
                 return_dict = {}
                 for key in [self.storage_fields['variable'], self.storage_fields['short_name'], self.rdp['freq'],
-                            self.rdp['type'], self.rdp['calc']]:
+                            self.rdp['type'], self.rdp['calc'],self.rdp['is_sa']]:
                     try:
                         return_dict[key] = guide.get(key).get(0)
                     except KeyError as e:
@@ -108,7 +108,7 @@ class DBManagerExcel(DataExcel):
             return_dict[self.storage_fields['short_name']] = storage_info[self.storage_fields['short_name']]
             ts_properties = {}
             return_dict['ts_properties_defined'] = True
-            for key in [self.rdp['freq'], self.rdp['type'], self.rdp['calc']]:
+            for key in [self.rdp['freq'], self.rdp['type'], self.rdp['calc'], self.rdp['is_sa']]:
                 if storage_info.get(key):
                     return_dict['ts_properties_defined'] *= True
                 else:
@@ -124,6 +124,7 @@ class DBManagerExcel(DataExcel):
                     self.rdp['freq']: None,
                     self.rdp['type']: None,
                     self.rdp['calc']: None,
+                    self.rdp['is_sa']: None
                 },
                 'ts_found': False,
                 'ts_properties_defined': False
