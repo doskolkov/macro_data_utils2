@@ -164,5 +164,71 @@ method. Specificly, when a method of this class is called, from property and des
 in config of corresponding base TimeSeriesTransformation class (e.g. 'frequency_transformations'). This class also stores transformation status - a dictionary with
 information on how the transformation terminated.
 
+Has following methods:
+1. **constructor**
+inputs: None
+Container:
+tt - a part of global project config that contains names of base transformations
+type_transformations - a configuring dictionary from type_transformations class object. Links type transformations to variable-destination-specific keys
+frequency_transformations - a configuring dictionary from frequency_transformations class object. Links frequency transformations to variable-destination-specific keys
+normalization_transformations - a configuring dictionary from normalization_transformations class object. Links normalization transformations to 
+variable-destination-specific keys
+seasonal_adjustment_transformations - a configuring dictionary from seasonal_adjustment_transformations class object. Links sa transformations 
+to variable-destination-specific
+keys
+transformation_status - dict with keys from keys of tt. Collects information on status of each transformation that has been called with this instance of
+TransformationFunctions class. Each value of this dict will be a dict with 3 keys: 
+	-status - either 0 (success) of 1 (fail)
+	-message - None if status is 0, and some string specifying the error otherwise 
+	-config_key - a key used by a method to find exact transformation method whithin base transformation class
+
+2. **type_transform**
+This method constructs a key from string inputs to find corresponding method in self.type_transformations and apply it to ts argument. It also adds information
+to self.transformation_status
+inputs:
+- ts - a timeseries to be transformed
+- property - a list of Variable.raw_ts_properties specified in TransformationsConfig.TransformMethodsDict[tt['type']]['property'] - these are specific for this 
+variable and transfromation type properties
+- instruction - these values are specified in TransformationsConfig.TransformMethodsDict[tt['type']]['instruction'] and are taken from each specific one of a 
+Variable.destinations.
+output:
+- a time-series with transformed type
+
+3. **freq_transform**
+This method constructs a key from string inputs to find corresponding method in self.frequency_transformations and apply it to ts argument. It also adds information
+to self.transformation_status
+inputs:
+- ts - a timeseries to be transformed
+- property - a list of Variable.raw_ts_properties specified in TransformationsConfig.TransformMethodsDict[tt['frequency']]['property'] - these are specific for this 
+variable and transfromation type properties
+- instruction - these values are specified in TransformationsConfig.TransformMethodsDict[tt['frequency']]['instruction'] and are taken from each specific one of a 
+Variable.destinations.
+output:
+- a time-series with transformed type
+
+4. **norm_transform**
+This method constructs a key from string inputs to find corresponding method in self.normalization_transformations and apply it to ts argument. It also adds information
+to self.transformation_status
+inputs:
+- ts - a timeseries to be transformed
+- property - a list of Variable.raw_ts_properties specified in TransformationsConfig.TransformMethodsDict[tt['normalization']]['property'] - these are specific for this 
+variable and transfromation type properties
+- instruction - these values are specified in TransformationsConfig.TransformMethodsDict[tt['normalization']]['instruction'] and are taken from each specific one of a 
+Variable.destinations.
+output:
+- a time-series with transformed type 
+
+5. **norm_transform**
+This method constructs a key from string inputs to find corresponding method in self.seasonal_adjustment_transformations and apply it to ts argument. It also adds 
+information to self.transformation_status
+inputs:
+- ts - a timeseries to be transformed
+- property - a list of Variable.raw_ts_properties specified in TransformationsConfig.TransformMethodsDict[tt['seasonal_adjustment']]['property'] - these are specific
+for this variable and transfromation type properties
+- instruction - these values are specified in TransformationsConfig.TransformMethodsDict[tt['seasonal_adjustment']]['instruction'] and are taken from each specific one 
+of a Variable.destinations.
+output:
+- a time-series with transformed type 
+
 ### 5. Class 'TimeSeriesTransformations'
 TODO: rewrite configs such that properly coded instructions can be implemented
