@@ -14,16 +14,22 @@ Has following methods:
 inputs: file path to the model
 outputs: None
 function: 
-	- initialize logger
-	- load YAML file with model settings, including main data fields and implemented string constants
-  - initialize basic class attributes. These are:
-    SourceTypeManagerMap - a mapping between codified source types mentioned in model "input" file and classes that treat abovementioned source types
-    database_sources - a multi-key mapping that between full definition of data source and corresponding data-loading instance
-    variables - a list of Variable instances. Each instance corresponds to unique set of InputInfoCols values.
-    properly_defined_variables - a sublist of variables list that stores variables such that 1) Their raw ts is located and imported (stored within variable container) and 2) their properties are fully defined, 
-which means that a data-loading instance was able to find nonempty information on its type, frequency, and 'calc' info field
-    undefined_variables_with_ts - a sublist of variables list that stores variables such that their raw ts is located and imported (stored within variable container)
-    undefined_variables - a sublist of variables list that stores variables such that there is no ts for them, so nothing can be done to those
+- initialize logger
+- load YAML file with model settings, including main data fields and implemented string constants
+- initialize basic class attributes. These are:
+    - SourceTypeManagerMap - a mapping between codified source types mentioned in model "input" file and classes that treat abovementioned source types
+    - model_output_sheets  - a dictionary that maps output_sheet to set of [already transformed] timeseries that are to be places on that sheet. This attribute
+	is being filled on self.initialize_model_schema method
+    - database_sources - a multi-key mapping that between full definition of data source and corresponding data-loading instance
+    - variables - a list of Variable instances. Each instance corresponds to unique set of InputInfoCols values.
+    - properly_defined_variables - a sublist of variables list that stores variables such that 1) Their raw ts is located and imported (stored within variable container)
+	and 2) their properties are fully defined, which means that a data-loading instance was able to find nonempty information on its type, frequency, and 'calc' info
+	field
+    - undefined_variables_with_ts - a sublist of variables list that stores variables such that their raw ts is located and imported (stored within variable container)
+    - undefined_variables - a sublist of variables list that stores variables such that there is no ts for them, so nothing can be done to those
+    - variable_transformation_statuses - a list of dictionaries; Entries of this list originate at self.transform_variables. Each entry stores 1) an instance of variable
+	class and 2) destination status - boolean flag indicating if destination (output_sheet key) transformartion went well
+    
 TODO:
   - TODO: Other informative attributes highlighting model processes
 
@@ -48,10 +54,16 @@ TODO: -add proper `logging` and exception handling
 
 
 5. **transofrm_variables**
-TODO: call Variable.transform method to transform raw ts according to @destinations@ argument and store transformed data
+This method calls Variable.transform() method for each properly defined instance of Variable class stores in self.properly_defined_variables. It also constructs
+self.variable_transformation_statuses attribute with outcomes of transformation procedure.
+inputs: None
+outputs: None
 
 6. **put_variables**
-TODO: call Variable.put_value method to put transformed data to destination sheet
+This method puts transformed timeseries to corresponding model output_sheet. First self.model_output_sheets dictionary is filled with named transformed timeseries.
+Secondly, it is transformed to dictionary of dataframes that are to be put to excel sheets. Finally excel model output sheets are filled.
+inputs: None
+outputs: None
 
 
 ### 2. Class `DBManagerExcel`
@@ -132,6 +144,7 @@ inputs:
 - date_from - TODO - implement this input
 - date_till - TODO - implement this input
 outputs: None
+
 3.  **transform**
 TODO: This method applies transformations
 
