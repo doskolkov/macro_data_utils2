@@ -146,10 +146,15 @@ inputs:
 outputs: None
 
 3.  **transform**
-TODO: This method applies transformations
+This method applies transformatoins to raw ts stored in self.raw_ts attribute. For each destination it performs transformations according to corresponding instruction
+and fills self.destination_ts, self.transformation_statuses and self.destination_transformation_applied attributes. This method only considers properly defined variables.
+inputs: None
+outputs: None
 
-4.  **put_value**
-TODO: This method returns transformed values
+4.  **return_value**
+This method returns transformed values stores in self.destination_ts. It also returns ts name to put it to model output sheet.
+inputs: destination - strng; a name of model output sheet, on of self.destinations values
+outputs: timeseries, timeseries.name
 
 ### 4. Class `TransformationsConfig`
 This class' main objective is to link time series transformation methods to properties and transformation instructions specific to each variable. Objects of this class
@@ -175,7 +180,7 @@ key that should contain logic of time series name transformation.
 This class' methods apply specific transformations to time series. Its methods are called through TransformationsConfig.TransformMethodsDict whithin Variable.transform 
 method. Specificly, when a method of this class is called, from property and destination values it constructs a key on which it finds a base method (e.g 'monthly_avr')
 in config of corresponding base TimeSeriesTransformation class (e.g. 'frequency_transformations'). This class also stores transformation status - a dictionary with
-information on how the transformation terminated.
+information concerning how transformation terminated.
 
 Has following methods:
 1. **constructor**
@@ -243,5 +248,78 @@ of a Variable.destinations.
 output:
 - a time-series with transformed type 
 
-### 5. Class 'TimeSeriesTransformations'
+### 6. Class 'type_transformations'
+Base type transformation implementing class. Contains working methods and a configuring method that contains pointers to working methods.
+
+Has following methods:
+1. **constructor** 
+inputs: None
+outputs: None
+attributes:
+t - a part of global project config that contains values of possible type-type properties
+
+2. **get_config**
+This method returns working methods config - a dictionary containing all methods related to keys constructed in TransformationFunctions.type_transform method.
+inputs: None
+outpus:
+config - dict; 
+
+3-10. **working methods**
+Each method transforms specific type timeseries to specific type timeseries as it is specified in class config. Each method takes a timeseries as input and returns
+timeseries. Only methods transforming something to index take optional argument, 'norm_value', which specifies the normalization value of index.
+TODO: rate_to_index method
+
+### 7. Class 'frequency_transformations'
+Base frequency transformation implementing class. Contains working methods and a configuring method that contains pointers to working methods.
+
+Has following methods:
+1. **constructor** 
+inputs: None
+outputs: None
+attributes:
+t - a part of global project config that contains values of possible type-type properties
+c - a part of global project config that contains values of possible calc-type properties
+
+2. **get_config**
+See type_transformations.get_config documentation
+
+3-15. **working methods**
+Each method takes timeseries as input and transforms it to other frequency with specific aggregation method. Each method returns a timeseries.
+
+16. **get_series_frequency**
+This method is called by each working method except unity_transformation. It defines and returns frequency of input timeseries
+inputs: timeseries
+outputs: string; a one-letter code indicating input timeseries frequency
+
+### 8. Class 'normalization_transformations'
+Base normalization transformation implementing class. Contains working methods and a configuring method that contains pointers to working methods.
+
+Has following methods: 
+1. **constructor** 
+inputs: None
+outputs: None
+attributes:
+t - a part of global project config that contains values of possible type-type properties
+
+2. **get_config**
+See type_transformations.get_config documentation
+
+3. **index_normalization**
+This method applies to index-type timeseries only. Basically it npormalizes index to specified value on specified date.
+inputs:
+ts - timeseries; a timeseries to be normalized
+norm_date - datetime; a normalization date
+norm_value - int; optional; a normalization value, default is 100
+outputs:
+ts - normalized timeseries
+
+4. **unity_transformation** 
+A nothing-doing method applied to those timeseries that need not be transformed, general for all base transforming classes.
+inputs:
+ts - timeseries;
+norm_date - whatever, must be at least some python object
+outputs: 
+ts
+
+### 9. Class 'seasonal_adjustment_transformations'
 TODO: rewrite configs such that properly coded instructions can be implemented
